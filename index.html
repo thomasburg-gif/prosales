@@ -13,6 +13,7 @@
             --text-muted: #94a3b8;
             --success: #22c55e;
             --error: #ef4444;
+            --warning: #f59e0b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -38,6 +39,7 @@
         .btn { width: 100%; background: var(--accent); color: var(--bg-color); border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
         .btn:active { opacity: 0.8; }
         .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
+        .btn-hint { background: transparent; border: 1px dashed var(--warning); color: var(--warning); margin-top: 10px; }
 
         /* Chrono & Progression */
         .hud { display: flex; justify-content: space-between; align-items: center; background: #0284c7; padding: 12px 16px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
@@ -47,6 +49,8 @@
         .status-msg { margin-top: 10px; font-size: 0.85rem; text-align: center; font-weight: 600; }
         .status-msg.error { color: var(--error); }
         .status-msg.success { color: var(--success); }
+        
+        .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 10px; color: #f1f5f9; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -81,7 +85,7 @@
     <div id="view-game" class="card hidden">
         <div class="hud">
             <span>⏱️ <span id="timer">01:30:00</span></span>
-            <span id="step-indicator">Étape 1/3</span>
+            <span id="step-indicator">Étape 1/4</span>
         </div>
 
         <h1 id="step-title">--</h1>
@@ -95,9 +99,13 @@
 
         <!-- Bloc Énigme -->
         <div id="riddle-block" class="hidden">
-            <p style="color: var(--text-main); font-weight: 600;" id="step-riddle"></p>
+            <p style="color: var(--text-main); font-weight: 600; margin-bottom: 10px;" id="step-riddle"></p>
             <input type="text" id="riddle-answer" placeholder="Votre réponse...">
             <button class="btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
+            
+            <button class="btn btn-hint" onclick="showHint()" data-i18n="hintBtn">💡 Demander un indice</button>
+            <div id="hint-text" class="hint-box hidden"></div>
+
             <div id="answer-status" class="status-msg"></div>
         </div>
     </div>
@@ -111,6 +119,7 @@ const TRANSLATIONS = {
         startBtn: "Commencer la partie (1h30)",
         gpsBtn: "📍 Vérifier ma position GPS",
         submitBtn: "Valider la réponse",
+        hintBtn: "💡 Demander un indice",
         gpsSuccess: "✓ Vous êtes au bon endroit !",
         gpsError: "❌ Vous êtes trop loin du lieu. Rapprochez-vous !",
         wrongAnswer: "❌ Mauvaise réponse, réessayez.",
@@ -122,6 +131,7 @@ const TRANSLATIONS = {
         startBtn: "Start the game (1h30)",
         gpsBtn: "📍 Check my GPS position",
         submitBtn: "Submit Answer",
+        hintBtn: "💡 Ask for a hint",
         gpsSuccess: "✓ You are at the right spot!",
         gpsError: "❌ You are too far away. Get closer!",
         wrongAnswer: "❌ Wrong answer, try again.",
@@ -133,21 +143,79 @@ const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
         theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
-        image: "colmar.jpg", // Image associée
+        image: "colmar.jpg",
         desc: { 
             fr: "L'esprit du Père Fouettard s'est réveillé au cœur de Colmar. Pour sauver la magie de Noël, parcourez le centre historique et résolvez l'énigme sacrée de Saint Nicolas avant que le chronomètre ne s'éteigne.",
             en: "Knecht Ruprecht's spirit has awakened in Colmar. To save the magic of Christmas, explore the historic center and solve St. Nicholas' riddle."
         },
         steps: [
             {
-                title: { fr: "Étape 1 : Le Repaire de Saint Nicolas", en: "Step 1: St. Nicholas' Lair" },
+                title: { fr: "Étape 1 : Le Sceau de la Collégiale", en: "Step 1: The Collegial Seal" },
                 story: { 
-                    fr: "Rendez-vous devant l'Église Saint-Martin à Colmar. Le Père Fouettard y a dissimulé le premier sceau.",
-                    en: "Head to St. Martin's Church in Colmar. Knecht Ruprecht hid the first seal there."
+                    fr: "Rendez-vous devant la Collégiale Saint-Martin. C'est ici que Hans Trapp a jeté son premier sort pour éteindre la lumière de Saint-Nicolas. Pour rompre le maléfice, observe le portail principal.", 
+                    en: "Head to St. Martin's Collegiate Church. This is where Hans Trapp cast his first spell. Examine the main portal to break it." 
                 },
                 coords: { lat: 48.0772, lng: 7.3582 },
-                riddle: { fr: "Comptez le nombre de grilles métalliques entourant la grande porte d'entrée principale.", en: "Count the number of metal gates surrounding the main entrance." },
-                answer: "8"
+                riddle: { 
+                    fr: "Combien de petites statues gardent l'arc au-dessus de la porte principale ?", 
+                    en: "How many small sculpted figures guard the arch above the main entrance?" 
+                },
+                hint: {
+                    fr: "Regardez attentivement l'archivolte (la voûte sculptée) juste au-dessus du portail d'entrée.",
+                    en: "Look closely at the archivolt (sculpted arch) right above the entrance door."
+                },
+                answer: ["12", "douze"]
+            },
+            {
+                title: { fr: "Étape 2 : Le Piège des Visages", en: "Step 2: The Trap of Faces" },
+                story: { 
+                    fr: "Dirigez-vous vers la Maison des Têtes (19 Rue des Têtes). Hans Trapp a dissimulé le deuxième indice parmi plus de cent visages en pierre figés à jamais.", 
+                    en: "Walk to the House of Heads (19 Rue des Têtes). Hans Trapp hid the second clue among over a hundred stone faces." 
+                },
+                coords: { lat: 48.0786, lng: 7.3556 },
+                riddle: { 
+                    fr: "Au sommet du pignon se dresse une statue en bronze. Quel objet tient-elle dans sa main droite ?", 
+                    en: "At the top of the gable stands a bronze statue. What object is it holding in its right hand?" 
+                },
+                hint: {
+                    fr: "C'est la statue du Tonnelier réalisée par Auguste Bartholdi tout au sommet de la façade.",
+                    en: "It is the statue of the Cooper made by Auguste Bartholdi at the very top of the facade."
+                },
+                answer: ["tonnelet", "tonneau", "petit tonneau"]
+            },
+            {
+                title: { fr: "Étape 3 : Le Pacte du Koïfhus", en: "Step 3: The Koïfhus Pact" },
+                story: { 
+                    fr: "Marchez jusqu'à l'Ancienne Douane (Koïfhus), Place de l'Ancienne Douane. C'est sous ces arcades que Saint Nicolas et Hans Trapp ont scellé leur pacte.", 
+                    en: "Walk to the Old Custom House (Koïfhus). Under these arcades, St. Nicholas and Hans Trapp sealed their pact." 
+                },
+                coords: { lat: 48.0758, lng: 7.3592 },
+                riddle: { 
+                    fr: "Trouvez l'année à 4 chiffres inscrite au-dessus du grand escalier extérieur.", 
+                    en: "Find the 4-digit year written above the main exterior staircase." 
+                },
+                hint: {
+                    fr: "Cherchez une date sculptée dans la pierre au sommet de l'escalier à balustrade.",
+                    en: "Look for a carved date in the stone at the top of the balustraded staircase."
+                },
+                answer: "1480"
+            },
+            {
+                title: { fr: "Étape 4 : L'Ultime Clef de la Lauch", en: "Step 4: The Final Key of the Lauch" },
+                story: { 
+                    fr: "Rejoignez le pont du Quai de la Poissonnerie (Petite Venise). Hans Trapp a voulu jeter la Clef d'Or dans la rivière, mais les eaux gelées l'ont bloquée sous le pont.", 
+                    en: "Reach the bridge at Quai de la Poissonnerie (Little Venice). Hans Trapp tried to throw the Golden Key into the river." 
+                },
+                coords: { lat: 48.0742, lng: 7.3597 },
+                riddle: { 
+                    fr: "Quel métier historique est représenté sur la plaque fixée au bord de l'eau ?", 
+                    en: "Which historical trade is depicted on the plaque near the water?" 
+                },
+                hint: {
+                    fr: "Ce sont les anciens hommes qui naviguaient sur les canaux pour transporter les marchandises.",
+                    en: "These were the men who navigated the canals to transport goods."
+                },
+                answer: ["batelier", "bateliers", "pêcheur", "pêcheurs"]
             }
         ]
     },
@@ -190,7 +258,6 @@ function updateUI() {
     document.getElementById('game-theme').innerText = currentGame.theme[currentLang];
     document.getElementById('game-desc').innerText = currentGame.desc[currentLang];
     
-    // Gestion de l'affichage de l'image
     const banner = document.getElementById('game-banner');
     if (currentGame.image) {
         banner.src = currentGame.image;
@@ -225,9 +292,23 @@ function updateTimer() {
 function loadStep(index) {
     currentStepIndex = index;
     const step = currentGame.steps[index];
+    
+    document.getElementById('step-indicator').innerText = `Étape ${index + 1}/${currentGame.steps.length}`;
     document.getElementById('step-title').innerText = step.title[currentLang];
     document.getElementById('step-story').innerText = step.story[currentLang];
     document.getElementById('step-riddle').innerText = step.riddle[currentLang];
+    
+    // Reset indice
+    const hintBox = document.getElementById('hint-text');
+    hintBox.classList.add('hidden');
+    hintBox.innerText = "";
+}
+
+function showHint() {
+    const step = currentGame.steps[currentStepIndex];
+    const hintBox = document.getElementById('hint-text');
+    hintBox.innerText = step.hint[currentLang];
+    hintBox.classList.remove('hidden');
 }
 
 function checkGPS() {
@@ -268,14 +349,42 @@ function getDistanceInMeters(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+function normalizeText(text) {
+    return text
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+}
+
 function submitAnswer() {
-    const input = document.getElementById('riddle-answer').value.trim();
+    const inputRaw = document.getElementById('riddle-answer').value;
     const status = document.getElementById('answer-status');
     const step = currentGame.steps[currentStepIndex];
 
-    if (input.toLowerCase() === step.answer.toLowerCase()) {
+    const cleanedInput = normalizeText(inputRaw);
+
+    if (!cleanedInput) return;
+
+    const validAnswers = Array.isArray(step.answer) ? step.answer : [step.answer];
+    const isCorrect = validAnswers.some(ans => normalizeText(ans) === cleanedInput);
+
+    if (isCorrect) {
         status.className = "status-msg success";
-        status.innerText = "✓ Étape validée !";
+        status.innerText = "✓ Bonne réponse !";
+        
+        document.getElementById('riddle-answer').value = "";
+        
+        setTimeout(() => {
+            if (currentStepIndex + 1 < currentGame.steps.length) {
+                document.getElementById('riddle-block').classList.add('hidden');
+                document.getElementById('gps-block').classList.remove('hidden');
+                document.getElementById('gps-status').innerText = "";
+                status.innerText = "";
+                loadStep(currentStepIndex + 1);
+            } else {
+                alert("🎉 Félicitations ! Vous avez libéré la ville du sortilège et terminé le jeu !");
+            }
+        }, 1500);
     } else {
         status.className = "status-msg error";
         status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
