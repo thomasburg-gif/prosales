@@ -28,6 +28,9 @@
         .card { background: var(--card-bg); padding: 24px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
         .hidden { display: none !important; }
         
+        /* Image de présentation */
+        .game-banner { width: 100%; height: auto; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
+
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
         
@@ -50,13 +53,14 @@
 
 <div class="app-container">
     <header>
-        <span style="font-weight: 800; tracking: 1px;">QUEST_APP</span>
+        <span style="font-weight: 800;">QUEST_APP</span>
         <select id="langSelect" class="lang-select" onchange="changeLanguage()">
             <option value="fr">FR 🇫🇷</option>
             <option value="en">EN 🇬🇧</option>
         </select>
     </header>
 
+    <!-- VUE 1 : Sélection des jeux -->
     <div id="view-selection" class="card">
         <h1 data-i18n="selectGameTitle">Choisissez votre aventure</h1>
         <p data-i18n="selectGameDesc">Scannez un QR code ou sélectionnez un jeu ci-dessous :</p>
@@ -64,13 +68,16 @@
         <button class="btn btn-outline" onclick="loadGame('vigne')">La vigne de l'horreur</button>
     </div>
 
+    <!-- VUE 2 : Présentation du jeu sélectionné -->
     <div id="view-intro" class="card hidden">
+        <img id="game-banner" class="game-banner hidden" src="" alt="Illustration du jeu">
         <h1 id="game-title">--</h1>
         <p id="game-theme"></p>
         <p id="game-desc"></p>
         <button class="btn" onclick="startGame()" data-i18n="startBtn">Commencer la partie</button>
     </div>
 
+    <!-- VUE 3 : Interface de jeu -->
     <div id="view-game" class="card hidden">
         <div class="hud">
             <span>⏱️ <span id="timer">01:30:00</span></span>
@@ -80,11 +87,13 @@
         <h1 id="step-title">--</h1>
         <p id="step-story"></p>
         
+        <!-- Bloc Vérification GPS -->
         <div id="gps-block" style="margin-bottom: 15px;">
             <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Vérifier ma position</button>
             <div id="gps-status" class="status-msg"></div>
         </div>
 
+        <!-- Bloc Énigme -->
         <div id="riddle-block" class="hidden">
             <p style="color: var(--text-main); font-weight: 600;" id="step-riddle"></p>
             <input type="text" id="riddle-answer" placeholder="Votre réponse...">
@@ -95,7 +104,6 @@
 </div>
 
 <script>
-// Données Multilingues et Scénarios
 const TRANSLATIONS = {
     fr: {
         selectGameTitle: "Choisissez votre aventure",
@@ -125,6 +133,7 @@ const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
         theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
+        image: "colmar.jpg", // Image associée
         desc: { 
             fr: "L'esprit du Père Fouettard s'est réveillé au cœur de Colmar. Pour sauver la magie de Noël, parcourez le centre historique et résolvez l'énigme sacrée de Saint Nicolas avant que le chronomètre ne s'éteigne.",
             en: "Knecht Ruprecht's spirit has awakened in Colmar. To save the magic of Christmas, explore the historic center and solve St. Nicholas' riddle."
@@ -136,15 +145,16 @@ const GAMES = {
                     fr: "Rendez-vous devant l'Église Saint-Martin à Colmar. Le Père Fouettard y a dissimulé le premier sceau.",
                     en: "Head to St. Martin's Church in Colmar. Knecht Ruprecht hid the first seal there."
                 },
-                coords: { lat: 48.0772, lng: 7.3582 }, // Coordonnées Place de la Cathédrale, Colmar
+                coords: { lat: 48.0772, lng: 7.3582 },
                 riddle: { fr: "Comptez le nombre de grilles métalliques entourant la grande porte d'entrée principale.", en: "Count the number of metal gates surrounding the main entrance." },
-                answer: "8" // Exemple de réponse
+                answer: "8"
             }
         ]
     },
     vigne: {
         title: { fr: "La vigne de l'horreur", en: "The Vineyard of Horror" },
         theme: { fr: "🍷 Thriller & Légendes sombres", en: "🍷 Thriller & Dark Legends" },
+        image: "",
         desc: { 
             fr: "Une malédiction pèse sur le vignoble... Élucidez le mystère avant la tombée de la nuit.",
             en: "A curse weighs upon the vineyard... Unravel the mystery before nightfall."
@@ -157,9 +167,8 @@ let currentLang = 'fr';
 let currentGame = null;
 let currentStepIndex = 0;
 let timerInterval = null;
-let timeRemaining = 90 * 60; // 1h30 en secondes
+let timeRemaining = 90 * 60;
 
-// Gestion des langues
 function changeLanguage() {
     currentLang = document.getElementById('langSelect').value;
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -169,7 +178,6 @@ function changeLanguage() {
     if (currentGame) updateUI();
 }
 
-// Chargement du jeu (Invoqué directement ou via QR code avec URL ?game=alsace)
 function loadGame(gameId) {
     currentGame = GAMES[gameId];
     document.getElementById('view-selection').classList.add('hidden');
@@ -181,14 +189,20 @@ function updateUI() {
     document.getElementById('game-title').innerText = currentGame.title[currentLang];
     document.getElementById('game-theme').innerText = currentGame.theme[currentLang];
     document.getElementById('game-desc').innerText = currentGame.desc[currentLang];
+    
+    // Gestion de l'affichage de l'image
+    const banner = document.getElementById('game-banner');
+    if (currentGame.image) {
+        banner.src = currentGame.image;
+        banner.classList.remove('hidden');
+    } else {
+        banner.classList.add('hidden');
+    }
 }
 
-// Démarrage du jeu et du chrono
 function startGame() {
     document.getElementById('view-intro').classList.add('hidden');
     document.getElementById('view-game').classList.remove('hidden');
-    
-    // Lancer Chrono
     timerInterval = setInterval(updateTimer, 1000);
     loadStep(0);
 }
@@ -216,7 +230,6 @@ function loadStep(index) {
     document.getElementById('step-riddle').innerText = step.riddle[currentLang];
 }
 
-// Vérification GPS (Calcul de distance Haversine)
 function checkGPS() {
     const status = document.getElementById('gps-status');
     
@@ -232,7 +245,6 @@ function checkGPS() {
 
         const distance = getDistanceInMeters(userLat, userLng, target.lat, target.lng);
 
-        // Si à moins de 50 mètres de la cible
         if (distance <= 50) {
             status.className = "status-msg success";
             status.innerText = TRANSLATIONS[currentLang].gpsSuccess;
@@ -256,7 +268,6 @@ function getDistanceInMeters(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Vérification de la réponse
 function submitAnswer() {
     const input = document.getElementById('riddle-answer').value.trim();
     const status = document.getElementById('answer-status');
@@ -265,14 +276,12 @@ function submitAnswer() {
     if (input.toLowerCase() === step.answer.toLowerCase()) {
         status.className = "status-msg success";
         status.innerText = "✓ Étape validée !";
-        // Logique pour passer à l'étape suivante si disponible...
     } else {
         status.className = "status-msg error";
         status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
     }
 }
 
-// Détecte le paramètre URL pour les QR codes (ex: masite.com/?game=alsace)
 window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const gameParam = urlParams.get('game');
