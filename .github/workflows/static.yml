@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Piste</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+        
+        .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Header & Langue */
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #334155; }
+        .lang-select { background: var(--card-bg); color: var(--text-main); border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        
+        /* Cartes & Vues */
+        .card { background: var(--card-bg); padding: 24px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .hidden { display: none !important; }
+        
+        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+        p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
+        
+        /* Boutons */
+        .btn { width: 100%; background: var(--accent); color: var(--bg-color); border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
+
+        /* Chrono & Progression */
+        .hud { display: flex; justify-content: space-between; align-items: center; background: #0284c7; padding: 12px 16px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
+        
+        /* Inputs & Alertes */
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; }
+        .status-msg { margin-top: 10px; font-size: 0.85rem; text-align: center; font-weight: 600; }
+        .status-msg.error { color: var(--error); }
+        .status-msg.success { color: var(--success); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <span style="font-weight: 800; tracking: 1px;">QUEST_APP</span>
+        <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+            <option value="fr">FR 🇫🇷</option>
+            <option value="en">EN 🇬🇧</option>
+        </select>
+    </header>
+
+    <div id="view-selection" class="card">
+        <h1 data-i18n="selectGameTitle">Choisissez votre aventure</h1>
+        <p data-i18n="selectGameDesc">Scannez un QR code ou sélectionnez un jeu ci-dessous :</p>
+        <button class="btn" onclick="loadGame('alsace')">La vieille fable alsacienne</button>
+        <button class="btn btn-outline" onclick="loadGame('vigne')">La vigne de l'horreur</button>
+    </div>
+
+    <div id="view-intro" class="card hidden">
+        <h1 id="game-title">--</h1>
+        <p id="game-theme"></p>
+        <p id="game-desc"></p>
+        <button class="btn" onclick="startGame()" data-i18n="startBtn">Commencer la partie</button>
+    </div>
+
+    <div id="view-game" class="card hidden">
+        <div class="hud">
+            <span>⏱️ <span id="timer">01:30:00</span></span>
+            <span id="step-indicator">Étape 1/3</span>
+        </div>
+
+        <h1 id="step-title">--</h1>
+        <p id="step-story"></p>
+        
+        <div id="gps-block" style="margin-bottom: 15px;">
+            <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Vérifier ma position</button>
+            <div id="gps-status" class="status-msg"></div>
+        </div>
+
+        <div id="riddle-block" class="hidden">
+            <p style="color: var(--text-main); font-weight: 600;" id="step-riddle"></p>
+            <input type="text" id="riddle-answer" placeholder="Votre réponse...">
+            <button class="btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
+            <div id="answer-status" class="status-msg"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Données Multilingues et Scénarios
+const TRANSLATIONS = {
+    fr: {
+        selectGameTitle: "Choisissez votre aventure",
+        selectGameDesc: "Scannez un QR code ou sélectionnez un jeu ci-dessous :",
+        startBtn: "Commencer la partie (1h30)",
+        gpsBtn: "📍 Vérifier ma position GPS",
+        submitBtn: "Valider la réponse",
+        gpsSuccess: "✓ Vous êtes au bon endroit !",
+        gpsError: "❌ Vous êtes trop loin du lieu. Rapprochez-vous !",
+        wrongAnswer: "❌ Mauvaise réponse, réessayez.",
+        timeOver: "⏱️ Temps écoulé !"
+    },
+    en: {
+        selectGameTitle: "Choose your adventure",
+        selectGameDesc: "Scan a QR code or select a game below:",
+        startBtn: "Start the game (1h30)",
+        gpsBtn: "📍 Check my GPS position",
+        submitBtn: "Submit Answer",
+        gpsSuccess: "✓ You are at the right spot!",
+        gpsError: "❌ You are too far away. Get closer!",
+        wrongAnswer: "❌ Wrong answer, try again.",
+        timeOver: "⏱️ Time is up!"
+    }
+};
+
+const GAMES = {
+    alsace: {
+        title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
+        theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
+        desc: { 
+            fr: "L'esprit du Père Fouettard s'est réveillé au cœur de Colmar. Pour sauver la magie de Noël, parcourez le centre historique et résolvez l'énigme sacrée de Saint Nicolas avant que le chronomètre ne s'éteigne.",
+            en: "Knecht Ruprecht's spirit has awakened in Colmar. To save the magic of Christmas, explore the historic center and solve St. Nicholas' riddle."
+        },
+        steps: [
+            {
+                title: { fr: "Étape 1 : Le Repaire de Saint Nicolas", en: "Step 1: St. Nicholas' Lair" },
+                story: { 
+                    fr: "Rendez-vous devant l'Église Saint-Martin à Colmar. Le Père Fouettard y a dissimulé le premier sceau.",
+                    en: "Head to St. Martin's Church in Colmar. Knecht Ruprecht hid the first seal there."
+                },
+                coords: { lat: 48.0772, lng: 7.3582 }, // Coordonnées Place de la Cathédrale, Colmar
+                riddle: { fr: "Comptez le nombre de grilles métalliques entourant la grande porte d'entrée principale.", en: "Count the number of metal gates surrounding the main entrance." },
+                answer: "8" // Exemple de réponse
+            }
+        ]
+    },
+    vigne: {
+        title: { fr: "La vigne de l'horreur", en: "The Vineyard of Horror" },
+        theme: { fr: "🍷 Thriller & Légendes sombres", en: "🍷 Thriller & Dark Legends" },
+        desc: { 
+            fr: "Une malédiction pèse sur le vignoble... Élucidez le mystère avant la tombée de la nuit.",
+            en: "A curse weighs upon the vineyard... Unravel the mystery before nightfall."
+        },
+        steps: []
+    }
+};
+
+let currentLang = 'fr';
+let currentGame = null;
+let currentStepIndex = 0;
+let timerInterval = null;
+let timeRemaining = 90 * 60; // 1h30 en secondes
+
+// Gestion des langues
+function changeLanguage() {
+    currentLang = document.getElementById('langSelect').value;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[currentLang][key]) el.innerText = TRANSLATIONS[currentLang][key];
+    });
+    if (currentGame) updateUI();
+}
+
+// Chargement du jeu (Invoqué directement ou via QR code avec URL ?game=alsace)
+function loadGame(gameId) {
+    currentGame = GAMES[gameId];
+    document.getElementById('view-selection').classList.add('hidden');
+    document.getElementById('view-intro').classList.remove('hidden');
+    updateUI();
+}
+
+function updateUI() {
+    document.getElementById('game-title').innerText = currentGame.title[currentLang];
+    document.getElementById('game-theme').innerText = currentGame.theme[currentLang];
+    document.getElementById('game-desc').innerText = currentGame.desc[currentLang];
+}
+
+// Démarrage du jeu et du chrono
+function startGame() {
+    document.getElementById('view-intro').classList.add('hidden');
+    document.getElementById('view-game').classList.remove('hidden');
+    
+    // Lancer Chrono
+    timerInterval = setInterval(updateTimer, 1000);
+    loadStep(0);
+}
+
+function updateTimer() {
+    let hours = Math.floor(timeRemaining / 3600);
+    let minutes = Math.floor((timeRemaining % 3600) / 60);
+    let seconds = timeRemaining % 60;
+    
+    document.getElementById('timer').innerText = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        alert(TRANSLATIONS[currentLang].timeOver);
+    }
+    timeRemaining--;
+}
+
+function loadStep(index) {
+    currentStepIndex = index;
+    const step = currentGame.steps[index];
+    document.getElementById('step-title').innerText = step.title[currentLang];
+    document.getElementById('step-story').innerText = step.story[currentLang];
+    document.getElementById('step-riddle').innerText = step.riddle[currentLang];
+}
+
+// Vérification GPS (Calcul de distance Haversine)
+function checkGPS() {
+    const status = document.getElementById('gps-status');
+    
+    if (!navigator.geolocation) {
+        status.innerText = "GPS non supporté par votre navigateur.";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        const target = currentGame.steps[currentStepIndex].coords;
+
+        const distance = getDistanceInMeters(userLat, userLng, target.lat, target.lng);
+
+        // Si à moins de 50 mètres de la cible
+        if (distance <= 50) {
+            status.className = "status-msg success";
+            status.innerText = TRANSLATIONS[currentLang].gpsSuccess;
+            document.getElementById('gps-block').classList.add('hidden');
+            document.getElementById('riddle-block').classList.remove('hidden');
+        } else {
+            status.className = "status-msg error";
+            status.innerText = `${TRANSLATIONS[currentLang].gpsError} (${Math.round(distance)}m)`;
+        }
+    }, () => {
+        status.className = "status-msg error";
+        status.innerText = "Activez la géolocalisation sur votre téléphone.";
+    });
+}
+
+function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const dLat = (lat2-lat1) * Math.PI / 180;
+    const dLon = (lon2-lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Vérification de la réponse
+function submitAnswer() {
+    const input = document.getElementById('riddle-answer').value.trim();
+    const status = document.getElementById('answer-status');
+    const step = currentGame.steps[currentStepIndex];
+
+    if (input.toLowerCase() === step.answer.toLowerCase()) {
+        status.className = "status-msg success";
+        status.innerText = "✓ Étape validée !";
+        // Logique pour passer à l'étape suivante si disponible...
+    } else {
+        status.className = "status-msg error";
+        status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
+    }
+}
+
+// Détecte le paramètre URL pour les QR codes (ex: masite.com/?game=alsace)
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameParam = urlParams.get('game');
+    if (gameParam && GAMES[gameParam]) {
+        loadGame(gameParam);
+    }
+};
+</script>
+</body>
+</html>
