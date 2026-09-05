@@ -14,6 +14,7 @@
             --success: #22c55e;
             --error: #ef4444;
             --warning: #f59e0b;
+            --admin: #a855f7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -40,6 +41,7 @@
         .btn:active { opacity: 0.8; }
         .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
         .btn-hint { background: transparent; border: 1px dashed var(--warning); color: var(--warning); margin-top: 10px; }
+        .btn-skip { background: var(--admin); color: white; margin-top: 10px; }
 
         /* Chrono & Progression */
         .hud { display: flex; justify-content: space-between; align-items: center; background: #0284c7; padding: 12px 16px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
@@ -51,6 +53,9 @@
         .status-msg.success { color: var(--success); }
         
         .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 10px; color: #f1f5f9; font-size: 0.9rem; }
+        
+        /* Banner Mode Admin */
+        .admin-badge { background: #581c87; color: #e9d5ff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px solid var(--admin); }
     </style>
 </head>
 <body>
@@ -83,6 +88,8 @@
 
     <!-- VUE 3 : Interface de jeu -->
     <div id="view-game" class="card hidden">
+        <div id="admin-indicator" class="admin-badge hidden">⚡ MODE TEST/ADMIN ACTIF</div>
+
         <div class="hud">
             <span>⏱️ <span id="timer">01:30:00</span></span>
             <span id="step-indicator">Étape 1/4</span>
@@ -106,12 +113,22 @@
             <button class="btn btn-hint" onclick="showHint()" data-i18n="hintBtn">💡 Demander un indice</button>
             <div id="hint-text" class="hint-box hidden"></div>
 
+            <button id="skip-btn" class="btn btn-skip hidden" onclick="skipStep()">⏩ Passer cette étape (Admin)</button>
+
             <div id="answer-status" class="status-msg"></div>
+        </div>
+
+        <!-- Pied de page : Activation du mode Admin -->
+        <div style="margin-top: 25px; text-align: center;">
+            <button style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline;" onclick="toggleAdminMode()">⚙️ Mode Admin / Test</button>
         </div>
     </div>
 </div>
 
 <script>
+const ADMIN_CODE = "1234"; // Code d'accès administrateur
+let isAdminMode = false;
+
 const TRANSLATIONS = {
     fr: {
         selectGameTitle: "Choisissez votre aventure",
@@ -237,6 +254,25 @@ let currentStepIndex = 0;
 let timerInterval = null;
 let timeRemaining = 90 * 60;
 
+function toggleAdminMode() {
+    if (!isAdminMode) {
+        const pwd = prompt("Saisissez le code d'accès administrateur :");
+        if (pwd === ADMIN_CODE) {
+            isAdminMode = true;
+            document.getElementById('admin-indicator').classList.remove('hidden');
+            document.getElementById('skip-btn').classList.remove('hidden');
+            alert("✅ Mode Admin activé ! Le GPS sera contourné et vous pouvez passer les étapes.");
+        } else {
+            alert("❌ Code incorrect.");
+        }
+    } else {
+        isAdminMode = false;
+        document.getElementById('admin-indicator').classList.add('hidden');
+        document.getElementById('skip-btn').classList.add('hidden');
+        alert("Mode Admin désactivé.");
+    }
+}
+
 function changeLanguage() {
     currentLang = document.getElementById('langSelect').value;
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -298,7 +334,6 @@ function loadStep(index) {
     document.getElementById('step-story').innerText = step.story[currentLang];
     document.getElementById('step-riddle').innerText = step.riddle[currentLang];
     
-    // Reset indice
     const hintBox = document.getElementById('hint-text');
     hintBox.classList.add('hidden');
     hintBox.innerText = "";
@@ -314,6 +349,15 @@ function showHint() {
 function checkGPS() {
     const status = document.getElementById('gps-status');
     
+    // Si le mode Admin est actif, on bypass la géolocalisation
+    if (isAdminMode) {
+        status.className = "status-msg success";
+        status.innerText = "⚡ Mode Test : Géolocalisation simulée avec succès !";
+        document.getElementById('gps-block').classList.add('hidden');
+        document.getElementById('riddle-block').classList.remove('hidden');
+        return;
+    }
+
     if (!navigator.geolocation) {
         status.innerText = "GPS non supporté par votre navigateur.";
         return;
@@ -356,6 +400,23 @@ function normalizeText(text) {
         .replace(/[^a-z0-9]/g, "");
 }
 
+function nextStepOrFinish() {
+    if (currentStepIndex + 1 < currentGame.steps.length) {
+        document.getElementById('riddle-block').classList.add('hidden');
+        document.getElementById('gps-block').classList.remove('hidden');
+        document.getElementById('gps-status').innerText = "";
+        document.getElementById('answer-status').innerText = "";
+        loadStep(currentStepIndex + 1);
+    } else {
+        alert("🎉 Félicitations ! Vous avez libéré la ville du sortilège et terminé le jeu !");
+    }
+}
+
+function skipStep() {
+    alert("⏩ Étape passée via le mode Admin.");
+    nextStepOrFinish();
+}
+
 function submitAnswer() {
     const inputRaw = document.getElementById('riddle-answer').value;
     const status = document.getElementById('answer-status');
@@ -371,19 +432,10 @@ function submitAnswer() {
     if (isCorrect) {
         status.className = "status-msg success";
         status.innerText = "✓ Bonne réponse !";
-        
         document.getElementById('riddle-answer').value = "";
         
         setTimeout(() => {
-            if (currentStepIndex + 1 < currentGame.steps.length) {
-                document.getElementById('riddle-block').classList.add('hidden');
-                document.getElementById('gps-block').classList.remove('hidden');
-                document.getElementById('gps-status').innerText = "";
-                status.innerText = "";
-                loadStep(currentStepIndex + 1);
-            } else {
-                alert("🎉 Félicitations ! Vous avez libéré la ville du sortilège et terminé le jeu !");
-            }
+            nextStepOrFinish();
         }, 1500);
     } else {
         status.className = "status-msg error";
