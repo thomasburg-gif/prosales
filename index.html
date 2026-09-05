@@ -69,6 +69,7 @@
         </select>
     </header>
 
+    <!-- VUE 1 : Sélection des jeux -->
     <div id="view-selection" class="card">
         <h1 data-i18n="selectGameTitle">Choisissez votre aventure</h1>
         <p data-i18n="selectGameDesc">Scannez un QR code ou sélectionnez un jeu ci-dessous :</p>
@@ -76,6 +77,7 @@
         <button class="btn btn-outline" onclick="loadGame('vigne')">La vigne de l'horreur</button>
     </div>
 
+    <!-- VUE 2 : Présentation du jeu sélectionné -->
     <div id="view-intro" class="card hidden">
         <img id="game-banner" class="game-banner hidden" src="" alt="Illustration du jeu">
         <h1 id="game-title">--</h1>
@@ -84,6 +86,7 @@
         <button class="btn" onclick="startGame()" data-i18n="startBtn">Commencer la partie</button>
     </div>
 
+    <!-- VUE 3 : Interface de jeu -->
     <div id="view-game" class="card hidden">
         <div id="admin-indicator" class="admin-badge hidden">⚡ MODE TEST/ADMIN ACTIF</div>
 
@@ -95,11 +98,13 @@
         <h1 id="step-title">--</h1>
         <p id="step-story"></p>
         
+        <!-- Bloc Vérification GPS -->
         <div id="gps-block" style="margin-bottom: 15px;">
             <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Vérifier ma position</button>
             <div id="gps-status" class="status-msg"></div>
         </div>
 
+        <!-- Bloc Énigme -->
         <div id="riddle-block" class="hidden">
             <p style="color: #38bdf8; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-size: 0.8rem;">🧩 Énigme du Saint-Esprit</p>
             <p style="color: var(--text-main); font-weight: 500; margin-bottom: 12px; line-height: 1.5;" id="step-riddle"></p>
@@ -107,6 +112,7 @@
             <input type="text" id="riddle-answer" placeholder="Entrez la réponse ou le mot secret...">
             <button class="btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
             
+            <!-- Système d'indices graduels -->
             <button class="btn btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Indice 1 : Piste de réflexion</button>
             <div id="hint-text-1" class="hint-box hidden"></div>
 
@@ -118,6 +124,7 @@
             <div id="answer-status" class="status-msg"></div>
         </div>
 
+        <!-- Pied de page : Activation du mode Admin -->
         <div style="margin-top: 25px; text-align: center;">
             <button style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline;" onclick="toggleAdminMode()">⚙️ Mode Admin / Test</button>
         </div>
@@ -297,15 +304,25 @@ function changeLanguage() {
 
 function loadGame(gameId) {
     currentGame = GAMES[gameId];
+    if (!currentGame) return;
+    
     document.getElementById('view-selection').classList.add('hidden');
     document.getElementById('view-intro').classList.remove('hidden');
     updateUI();
 }
 
+function getText(obj) {
+    if (!obj) return "";
+    if (typeof obj === 'string') return obj;
+    return obj[currentLang] || obj['fr'] || "";
+}
+
 function updateUI() {
-    document.getElementById('game-title').innerText = currentGame.title[currentLang];
-    document.getElementById('game-theme').innerText = currentGame.theme[currentLang];
-    document.getElementById('game-desc').innerText = currentGame.desc[currentLang];
+    if (!currentGame) return;
+    
+    document.getElementById('game-title').innerText = getText(currentGame.title);
+    document.getElementById('game-theme').innerText = getText(currentGame.theme);
+    document.getElementById('game-desc').innerText = getText(currentGame.desc);
     
     const banner = document.getElementById('game-banner');
     if (currentGame.image) {
@@ -319,7 +336,9 @@ function updateUI() {
 function startGame() {
     document.getElementById('view-intro').classList.add('hidden');
     document.getElementById('view-game').classList.remove('hidden');
-    timerInterval = setInterval(updateTimer, 1000);
+    if (!timerInterval) {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
     loadStep(0);
 }
 
@@ -341,11 +360,12 @@ function updateTimer() {
 function loadStep(index) {
     currentStepIndex = index;
     const step = currentGame.steps[index];
+    if (!step) return;
     
     document.getElementById('step-indicator').innerText = `Étape ${index + 1}/${currentGame.steps.length}`;
-    document.getElementById('step-title').innerText = step.title[currentLang];
-    document.getElementById('step-story').innerText = step.story[currentLang];
-    document.getElementById('step-riddle').innerText = step.riddle[currentLang];
+    document.getElementById('step-title').innerText = getText(step.title);
+    document.getElementById('step-story').innerText = getText(step.story);
+    document.getElementById('step-riddle').innerText = getText(step.riddle);
     
     // Reset indices
     document.getElementById('hint-text-1').classList.add('hidden');
@@ -357,14 +377,16 @@ function loadStep(index) {
 
 function showHint(level) {
     const step = currentGame.steps[currentStepIndex];
+    if (!step) return;
+    
     if (level === 1) {
         const hintBox1 = document.getElementById('hint-text-1');
-        hintBox1.innerText = step.hint1[currentLang];
+        hintBox1.innerText = getText(step.hint1);
         hintBox1.classList.remove('hidden');
         document.getElementById('hint-btn-2').classList.remove('hidden');
     } else if (level === 2) {
         const hintBox2 = document.getElementById('hint-text-2');
-        hintBox2.innerText = step.hint2[currentLang];
+        hintBox2.innerText = getText(step.hint2);
         hintBox2.classList.remove('hidden');
     }
 }
@@ -454,4 +476,24 @@ function submitAnswer() {
     if (isCorrect) {
         status.className = "status-msg success";
         status.innerText = "✓ Excellente déduction ! Le sortilège s'affaiblit...";
-        document.getElementById('
+        document.getElementById('riddle-answer').value = "";
+        
+        setTimeout(() => {
+            nextStepOrFinish();
+        }, 1500);
+    } else {
+        status.className = "status-msg error";
+        status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
+    }
+}
+
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameParam = urlParams.get('game');
+    if (gameParam && GAMES[gameParam]) {
+        loadGame(gameParam);
+    }
+};
+</script>
+</body>
+</html>
