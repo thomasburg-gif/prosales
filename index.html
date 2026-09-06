@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visite Interactive - Colmar</title>
+    <title>Visite Interactive avec Barnabé la Cigogne</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -30,9 +30,15 @@
         .card { background: var(--card-bg); padding: 24px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
         .hidden { display: none !important; }
         
-        /* Images de présentation & d'histoire */
+        /* Images */
         .game-banner { width: 100%; height: auto; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
-        .step-photo { width: 100%; height: 240px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
+        .step-photo { width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
+
+        /* Style Guide & Bulle de dialogue BD */
+        .stork-container { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; }
+        .stork-avatar { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); background: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        .speech-bubble { background: #0f172a; border: 1px solid var(--accent); padding: 12px 16px; border-radius: 12px; border-top-left-radius: 2px; position: relative; color: var(--text-main); font-size: 0.9rem; line-height: 1.4; }
+        .stork-name { font-weight: bold; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: block; }
 
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
@@ -82,13 +88,21 @@
         <button class="btn btn-outline" onclick="loadGame('vigne')">La vigne de l'horreur</button>
     </div>
 
-    <!-- VUE 2 : Présentation de la visite -->
+    <!-- VUE 2 : Présentation de la visite avec Barnabé -->
     <div id="view-intro" class="card hidden">
         <img id="game-banner" class="game-banner hidden" src="" alt="Illustration du jeu">
         <h1 id="game-title">--</h1>
-        <p id="game-theme"></p>
-        <p id="game-desc"></p>
-        <button class="btn" onclick="startGame()" data-i18n="startBtn">Démarrer la visite</button>
+        
+        <!-- Bulle de bienvenue de Barnabé -->
+        <div class="stork-container">
+            <div class="stork-avatar">🪶</div>
+            <div class="speech-bubble">
+                <span class="stork-name">Barnabé la Cigogne</span>
+                <span id="game-desc">--</span>
+            </div>
+        </div>
+
+        <button class="btn" onclick="startGame()" data-i18n="startBtn">Suivre Barnabé !</button>
     </div>
 
     <!-- VUE 3 : Interface de la visite -->
@@ -102,13 +116,19 @@
 
         <h1 id="step-title">--</h1>
         
+        <!-- Bulle d'orientation de Barnabé -->
+        <div class="stork-container">
+            <div class="stork-avatar">🪶</div>
+            <div class="speech-bubble">
+                <span class="stork-name">Barnabé la Cigogne</span>
+                <span id="step-location-text">--</span>
+            </div>
+        </div>
+
         <!-- Bloc Plan & Guidage GPS -->
         <div class="location-card">
-            <p style="color: #38bdf8; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 5px;">📍 Prochaine Étape & Plan :</p>
-            <p id="step-location-text" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 8px;"></p>
-            
             <iframe id="map-frame" class="map-iframe" src=""></iframe>
-            <a id="gmaps-link" class="btn-map" href="" target="_blank">🗺️ Lancer le guidage dans Google Maps</a>
+            <a id="gmaps-link" class="btn-map" href="" target="_blank">🗺️ Ouvrir dans Google Maps</a>
         </div>
 
         <!-- Validation de la position -->
@@ -119,26 +139,38 @@
 
         <!-- Bloc Énigme d'Observation sur place -->
         <div id="riddle-block" class="hidden">
-            <p style="color: #22c55e; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-size: 0.8rem;">🔍 Énigme d'Observation</p>
-            <p style="color: var(--text-main); font-weight: 500; margin-bottom: 12px; line-height: 1.5;" id="step-riddle"></p>
+            <div class="stork-container">
+                <div class="stork-avatar">🧐</div>
+                <div class="speech-bubble">
+                    <span class="stork-name">Barnabé la Cigogne</span>
+                    <span id="step-riddle">--</span>
+                </div>
+            </div>
             
             <input type="text" id="riddle-answer" placeholder="Entrez votre réponse...">
             <button class="btn" id="submit-btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
 
-            <!-- Bloc Histoire & Photo Spécifique Post-Validation -->
+            <!-- Bloc Histoire & Photo Post-Validation -->
             <div id="history-block" class="history-box hidden">
                 <img id="step-photo" class="step-photo" src="" alt="Détail du monument">
-                <p style="font-weight: 700; color: #a7f3d0; margin-bottom: 6px;">📜 LE SAVIEZ-VOUS ?</p>
-                <p id="history-text" style="color: #ecfdf5; margin-bottom: 15px;"></p>
+                
+                <div class="stork-container" style="margin-bottom: 10px;">
+                    <div class="stork-avatar">🎓</div>
+                    <div class="speech-bubble" style="background: #022c22; border-color: #10b981;">
+                        <span class="stork-name" style="color: #34d399;">Le Secret de Barnabé</span>
+                        <span id="history-text" style="color: #ecfdf5;">--</span>
+                    </div>
+                </div>
+
                 <button class="btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Étape suivante ➔</button>
             </div>
             
             <!-- Indices à 2 niveaux -->
             <div id="hints-container">
-                <button class="btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Indice 1 : Piste de recherche</button>
+                <button class="btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Un p'tit coup de bec ? (Indice 1)</button>
                 <div id="hint-text-1" class="hint-box hidden"></div>
 
-                <button class="btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Indice 2 : Révéler la réponse</button>
+                <button class="btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Barnabé te donne la réponse (Indice 2)</button>
                 <div id="hint-text-2" class="hint-box hidden"></div>
             </div>
 
@@ -161,23 +193,23 @@ const TRANSLATIONS = {
     fr: {
         selectGameTitle: "Choisissez votre parcours",
         selectGameDesc: "Scannez un QR code ou sélectionnez une visite ci-dessous :",
-        startBtn: "Démarrer la visite",
+        startBtn: "Suivre Barnabé !",
         gpsBtn: "📍 Valider mon arrivée sur place",
         submitBtn: "Valider la réponse",
-        gpsSuccess: "✓ Vous êtes arrivé ! Observez le lieu pour répondre.",
-        gpsError: "❌ Vous n'êtes pas assez proche du monument. Suivez la carte !",
-        wrongAnswer: "❌ Mauvaise réponse, observez bien ou utilisez un indice !",
-        timeOver: "⏱️ Temps écoulé !"
+        gpsSuccess: "✓ Bravo, vous êtes au bon endroit ! Regardez autour de vous.",
+        gpsError: "❌ Houla ! Vous n'êtes pas assez proche. Suivez la carte !",
+        wrongAnswer: "❌ Ce n'est pas tout à fait ça... Regardez bien ou demandez-moi un coup de bec !",
+        timeOver: "⏱️ Le temps est écoulé !"
     },
     en: {
         selectGameTitle: "Choose your tour",
         selectGameDesc: "Scan a QR code or select a tour below:",
-        startBtn: "Start the tour",
+        startBtn: "Follow Barnabé!",
         gpsBtn: "📍 Check location arrival",
         submitBtn: "Submit Answer",
-        gpsSuccess: "✓ You arrived! Look around to answer.",
-        gpsError: "❌ You are not close enough. Follow the map!",
-        wrongAnswer: "❌ Wrong answer, look closely or use a hint!",
+        gpsSuccess: "✓ Great job, you arrived! Look around you.",
+        gpsError: "❌ Oops! You are not close enough. Follow the map!",
+        wrongAnswer: "❌ Not quite... Look carefully or ask me for a hint!",
         timeOver: "⏱️ Time is up!"
     }
 };
@@ -185,11 +217,11 @@ const TRANSLATIONS = {
 const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
-        theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
+        theme: { fr: "🎄 Sur les traces de Saint Nicolas & du Père Fouettard", en: "🎄 Following St. Nicholas & Knecht Ruprecht" },
         image: "colmar.jpg",
         desc: { 
-            fr: "Parcourez le centre historique de Colmar guidé par une carte interactive. À chaque monument, validez votre position, observez les détails sculptés et découvrez l'histoire fascinante de la ville.",
-            en: "Explore Colmar's historic center with an interactive map. At each monument, check your position, observe sculpted details, and discover the town's history."
+            fr: "Salut l'équipe ! Moi c'est Barnabé, la cigogne officielle de Colmar ! Suivez-moi à travers le centre historique, je vais vous faire découvrir mes endroits secrets préférés et les plus beaux trésors de la ville !",
+            en: "Hi team! I'm Barnabé, Colmar's official stork! Follow me through the historic center, I'll show you my favorite secret spots and monuments!"
         },
         steps: [
             {
@@ -197,25 +229,24 @@ const GAMES = {
                 coords: { lat: 48.0772, lng: 7.3582 },
                 
                 location_text: { 
-                    fr: "Rendez-vous sur la Place de la Cathédrale, devant le portail Sud de la Collégiale Saint-Martin.", 
-                    en: "Head to Church Square, in front of the South portal of St. Martin's Church." 
+                    fr: "Volons jusqu'à la Place de la Cathédrale ! Retrouvez-moi juste devant le portail Sud de la grande église en pierre rose.", 
+                    en: "Let's fly to Church Square! Meet me in front of the South portal of the big pink stone church." 
                 },
                 
                 riddle: { 
-                    fr: "Observez les sculptures entourant la porte. L'une des figures sculptées tient un outil tranchant de maçon au lieu d'un livre. Quel est cet outil ?", 
-                    en: "Observe the sculptures around the door. One figure holds a sharp mason tool instead of a book. What tool is it?" 
+                    fr: "Observez bien les sculptures autour de la porte. L'une des figures tient un outil tranchant de maçon au lieu d'un livre. Quel est cet outil ?", 
+                    en: "Look closely at the sculptures around the door. One figure holds a sharp mason tool instead of a book. What tool is it?" 
                 },
                 
-                // Photo du portail sculpté et du tympan
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg/800px-Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg",
+                photo: "https://images.unsplash.com/photo-1543872084-c7bd3822856f?q=80&w=800",
                 
                 history: {
-                    fr: "Cette hachette (ou erminette) rappelle le rôle fondamental des tailleurs de pierre. En construisant la Collégiale entre 1234 et 1365, ces artisans gravaient leur marque personnelle dans le grès rose pour percevoir leur salaire. Cette figure rend hommage aux bâtisseurs anonymes du gothique alsacien !",
-                    en: "This axe symbolizes the crucial role of medieval stonemasons who built St. Martin's Church between 1234 and 1365. Masons carved personal marks on every stone to get paid. This figure honors the anonymous craftsmen of Alsatian Gothic architecture!"
+                    fr: "Cette hachette (ou erminette) rappelle le rôle clé des tailleurs de pierre ! En bâtissant la Collégiale entre 1234 et 1365, ces artisans gravaient leur marque personnelle dans le grès rose pour percevoir leur salaire. Une vraie signature d'artiste du Moyen Âge !",
+                    en: "This axe symbolizes the crucial role of medieval stonemasons who built St. Martin's Church between 1234 and 1365. Masons carved personal marks on every stone to get paid!"
                 },
 
-                hint1: { fr: "Regardez attentivement l'archivolte (la voûte sculptée) juste au-dessus du portail. L'outil possède un manche et sert à couper.", en: "Look closely at the arch above the door. The tool has a handle and is used for cutting." },
-                hint2: { fr: "Le mot recherché est : HACHE", en: "The word you are looking for is: AXE" },
+                hint1: { fr: "Barnabé chuchote : Regardez la voûte sculptée au-dessus du portail. Cet outil a un manche et sert à tailler la pierre !", en: "Look at the arch above the door. It's a cutting tool with a handle!" },
+                hint2: { fr: "Barnabé te donne le mot exact : HACHE", en: "Barnabé gives you the word: AXE" },
                 answer: ["hache", "l'hache", "une hache", "erminette", "hachette"]
             },
             {
@@ -223,25 +254,24 @@ const GAMES = {
                 coords: { lat: 48.0786, lng: 7.3556 },
                 
                 location_text: { 
-                    fr: "Dirigez-vous au 19 Rue des Têtes pour admettre la célèbre façade Renaissance.", 
-                    en: "Walk to 19 Rue des Têtes to admire the famous Renaissance facade." 
+                    fr: "Suivez-moi au 19 Rue des Têtes ! On va admirer la plus drôle des façades de Colmar !", 
+                    en: "Follow me to 19 Rue des Têtes! We are going to admire the funniest facade in town!" 
                 },
                 
                 riddle: { 
-                    fr: "Au sommet du pignon, la statue en bronze créée par Bartholdi tient un récipient lié à la boisson la plus célèbre d'Alsace. Quel est ce produit ?", 
-                    en: "At the top, the bronze statue holds a vessel related to Alsace's most famous drink. What is this product?" 
+                    fr: "Regardez tout au sommet du pignon : la statue en bronze de Bartholdi tient un récipient lié à la boisson la plus célèbre de notre région. Quel est ce produit ?", 
+                    en: "Look at the very top: the bronze statue holds a vessel related to our region's most famous drink. What product is it?" 
                 },
                 
-                // Photo gros plan de la statue du Tonnelier de Bartholdi au sommet de la Maison des Têtes
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg/800px-Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg",
+                photo: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=800",
                 
                 history: {
-                    fr: "Construite en 1609 pour le marchand Anton Burger, la Maison des Têtes comporte 106 masques en pierre grotesque. Au sommet du pignon se dresse la statue du Tonnelier créée en 1902 par Auguste Bartholdi, le célèbre sculpteur colmarien créateur de la Statue de la Liberté à New York !",
-                    en: "Built in 1609 for merchant Anton Burger, the House of Heads features 106 grotesque stone masks. The top bronze Cooper statue was sculpted in 1902 by Auguste Bartholdi, the famous sculptor from Colmar who created the Statue of Liberty in New York!"
+                    fr: "Construite en 1609, cette maison compte 106 masques en pierre grimaçants ! Et devinez quoi ? La statue du Tonnelier au sommet a été sculptée par Auguste Bartholdi en 1902... le génie colmarien qui a aussi créé la Statue de la Liberté à New York !",
+                    en: "Built in 1609, this house has 106 grimacing stone masks! The top Cooper statue was sculpted by Auguste Bartholdi, the genius from Colmar who created the Statue of Liberty in NY!"
                 },
 
-                hint1: { fr: "C'est le Tonnelier tout en haut. Pensez au liquide produit par les vignerons locaux.", en: "It is the Cooper at the top. Think of the beverage made by winemakers." },
-                hint2: { fr: "Le mot recherché est : VIN", en: "The word you are looking for is: WINE" },
+                hint1: { fr: "Barnabé chuchote : C'est la statue du Tonnelier tout en haut... Pensez au breuvage fait avec les raisins alsaciens !", en: "Think of the drink made with local grapes!" },
+                hint2: { fr: "Barnabé te donne le mot exact : VIN", en: "Barnabé gives you the word: WINE" },
                 answer: ["vin", "le vin", "biere", "la biere", "vin d'alsace"]
             },
             {
@@ -249,25 +279,24 @@ const GAMES = {
                 coords: { lat: 48.0758, lng: 7.3592 },
                 
                 location_text: { 
-                    fr: "Marchez jusqu'à la Place de l'Ancienne Douane devant le bâtiment du Koïfhus.", 
-                    en: "Walk to Old Custom Square in front of the Koïfhus building." 
+                    fr: "Direction la Place de l'Ancienne Douane ! C'est le plus ancien bâtiment public profane de la ville !", 
+                    en: "Head to Old Custom Square! It's the oldest public building in town!" 
                 },
                 
                 riddle: { 
-                    fr: "Observez le blason sculpté au-dessus de la grande voûte traversant le bâtiment. Quel animal mythique (mi-aigle, mi-lion) protège les armoiries de Colmar ?", 
-                    en: "Look at the crest carved above the vaulted passage. Which mythical creature (half eagle, half lion) protects Colmar's seal?" 
+                    fr: "Observez le blason sculpté au-dessus de la grande voûte traversante. Quel animal mythique (mi-aigle, mi-lion) protège les armoiries de Colmar ?", 
+                    en: "Look at the crest above the vaulted passage. Which mythical creature (half eagle, half lion) protects Colmar's seal?" 
                 },
                 
-                // Photo du Koïfhus montrant l'arche voûtée et ses décors sculptés
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Ko%C3%AFfhus_Colmar.jpg/800px-Ko%C3%AFfhus_Colmar.jpg",
+                photo: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=800",
                 
                 history: {
-                    fr: "Achevé en 1480, le Koïfhus est le plus ancien bâtiment public profane de Colmar. Toutes les marchandises importées y étaient taxées. Le Griffon sculpté au-dessus de la voûte symbolise la vigilance : la force du lion pour défendre les coffres et la vision de l'aigle pour débusquer la fraude !",
-                    en: "Completed in 1480, Koïfhus is Colmar's oldest public secular building. Imported goods were taxed here. The Griffon above the arch symbolizes vigilance: lion strength to protect chests and eagle vision to catch smugglers!"
+                    fr: "Achevé en 1480, le Koïfhus servait de douane où toutes les marchandises étaient taxées. Le Griffon sculpté au-dessus de la voûte est un gardien parfait : il a la force du lion pour protéger le trésor et la vue d'aigle pour repérer les fraudeurs !",
+                    en: "Completed in 1480, Koïfhus was a customs building. The Griffon above the arch has lion strength to guard money and eagle sight to catch frauds!"
                 },
 
-                hint1: { fr: "Créature mythologique ailée possédant des serres d'aigle et un corps de lion.", en: "Mythological winged creature with eagle talons and lion body." },
-                hint2: { fr: "Le mot recherché est : GRIFFON", en: "The word you are looking for is: GRYPHON" },
+                hint1: { fr: "Barnabé chuchote : C'est une créature légendaire ailée avec un corps de lion !", en: "It's a legendary winged creature with a lion body!" },
+                hint2: { fr: "Barnabé te donne le mot exact : GRIFFON", en: "Barnabé gives you the word: GRYPHON" },
                 answer: ["griffon", "le griffon", "griffin", "un griffon"]
             },
             {
@@ -275,25 +304,24 @@ const GAMES = {
                 coords: { lat: 48.0742, lng: 7.3597 },
                 
                 location_text: { 
-                    fr: "Rejoignez le pont du Quai de la Poissonnerie, au cœur de la Petite Venise.", 
-                    en: "Reach the bridge at Quai de la Poissonnerie in Little Venice." 
+                    fr: "Posons-nous sur le pont du Quai de la Poissonnerie, au cœur de la Petite Venise ! C'est mon endroit préféré pour nicher !", 
+                    en: "Let's stop on the bridge at Quai de la Poissonnerie in Little Venice! It's my favorite nesting spot!" 
                 },
                 
                 riddle: { 
-                    fr: "Quel légume traditionnel de la choucroute alsacienne était autrefois transporté en masse sur ces barques à fond plat ?", 
+                    fr: "Quel légume traditionnel de notre célèbre choucroute alsacienne était autrefois transporté en masse sur ces barques à fond plat ?", 
                     en: "Which traditional sauerkraut vegetable was transported by these flat boats?" 
                 },
                 
-                // Photo des barques et canaux de la Petite Venise au Quai de la Poissonnerie
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Petite_Venise_Colmar.jpg/800px-Petite_Venise_Colmar.jpg",
+                photo: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800",
                 
                 history: {
-                    fr: "Le Quai de la Poissonnerie était le centre névralgique des pêcheurs et maraîchers. Ces derniers transportaient des tonnes de choux à bord de barques à fond plat naviguant sur la Lauch. La fermentation du chou en choucroute permettait de conserver des vitamines précieuses durant tout l'hiver !",
-                    en: "Quai de la Poissonnerie was the home of fishermen and boatmen. They transported tons of cabbages on flat boats along the Lauch river. Fermenting cabbage into sauerkraut provided essential vitamins through harsh winters!"
+                    fr: "C'était le quartier des pêcheurs et des maraîchers ! Ces derniers naviguaient sur la rivière Lauch pour apporter des tonnes de choux directement aux marchés de la ville. Une vraie tradition alsacienne !",
+                    en: "This was the home of fishermen and boatmen! They navigated the Lauch river to bring tons of cabbages directly to city markets!"
                 },
 
-                hint1: { fr: "C'est l'ingrédient végétal principal servant à faire la Choucroute.", en: "It is the main vegetable used to make Sauerkraut." },
-                hint2: { fr: "Le mot recherché est : CHOU", en: "The word you are looking for is: CABBAGE" },
+                hint1: { fr: "Barnabé chuchote : C'est le légume vert ou blanc qui sert de base à la Choucroute !", en: "It's the vegetable used to make Sauerkraut!" },
+                hint2: { fr: "Barnabé te donne le mot exact : CHOU", en: "Barnabé gives you the word: CABBAGE" },
                 answer: ["chou", "le chou", "choux", "les choux"]
             }
         ]
@@ -505,7 +533,7 @@ function nextStepOrFinish() {
         document.getElementById('answer-status').innerText = "";
         loadStep(currentStepIndex + 1);
     } else {
-        alert("🎉 Félicitations ! Vous avez terminé la visite de Colmar !");
+        alert("🎉 Bravo ! Barnabé vous félicite, vous avez terminé la visite de Colmar !");
     }
 }
 
