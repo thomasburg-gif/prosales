@@ -31,8 +31,8 @@
         .hidden { display: none !important; }
         
         /* Images de présentation & d'histoire */
-        .game-banner { width: 100%; height: auto; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
-        .step-photo { width: 100%; height: 200px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
+        .game-banner { width: 100%; height: 200px; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
+        .step-photo { width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
 
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
@@ -41,7 +41,7 @@
         .btn { width: 100%; background: var(--accent); color: var(--bg-color); border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
         .btn:active { opacity: 0.8; }
         .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
-        .btn-hint { background: transparent; border: 1px dashed var(--warning); color: var(--warning); margin-top: 10px; padding: 10px; font-size: 0.85rem; }
+        .btn-hint { background: transparent; border: 1px dashed var(--warning); color: var(--warning); margin-top: 10px; padding: 10px; font-size: 0.85rem; width: 100%; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-skip { background: var(--admin); color: white; margin-top: 10px; }
         .btn-map { background: #0284c7; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: 600; text-decoration: none; display: inline-block; text-align: center; margin-top: 8px; width: 100%; font-size: 0.85rem; }
 
@@ -54,7 +54,7 @@
         .status-msg.error { color: var(--error); }
         .status-msg.success { color: var(--success); }
         
-        .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 10px; color: #f1f5f9; font-size: 0.85rem; line-height: 1.4; }
+        .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 8px; color: #f1f5f9; font-size: 0.85rem; line-height: 1.4; }
         .history-box { background: #064e3b; border: 1px solid var(--success); padding: 14px; border-radius: 10px; margin-top: 15px; color: #ecfdf5; font-size: 0.88rem; line-height: 1.5; }
         .admin-badge { background: #581c87; color: #e9d5ff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px solid var(--admin); }
         
@@ -107,7 +107,6 @@
             <p style="color: #38bdf8; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 5px;">📍 Prochaine Étape & Plan :</p>
             <p id="step-location-text" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 8px;"></p>
             
-            <!-- Carte interactive embarquée -->
             <iframe id="map-frame" class="map-iframe" src=""></iframe>
             <a id="gmaps-link" class="btn-map" href="" target="_blank">🗺️ Lancer le guidage dans Google Maps</a>
         </div>
@@ -134,8 +133,14 @@
                 <button class="btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Étape suivante ➔</button>
             </div>
             
-            <button class="btn btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Demander un indice</button>
-            <div id="hint-text-1" class="hint-box hidden"></div>
+            <!-- Indices à 2 niveaux -->
+            <div id="hints-container">
+                <button class="btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Indice 1 : Piste de recherche</button>
+                <div id="hint-text-1" class="hint-box hidden"></div>
+
+                <button class="btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Indice 2 : Révéler la réponse</button>
+                <div id="hint-text-2" class="hint-box hidden"></div>
+            </div>
 
             <button id="skip-btn" class="btn btn-skip hidden" onclick="skipStep()">⏩ Passer cette étape (Admin)</button>
 
@@ -161,7 +166,7 @@ const TRANSLATIONS = {
         submitBtn: "Valider la réponse",
         gpsSuccess: "✓ Vous êtes arrivé ! Observez le lieu pour répondre.",
         gpsError: "❌ Vous n'êtes pas assez proche du monument. Suivez la carte !",
-        wrongAnswer: "❌ Mauvaise réponse, observez bien le monument !",
+        wrongAnswer: "❌ Mauvaise réponse, observez bien ou utilisez un indice !",
         timeOver: "⏱️ Temps écoulé !"
     },
     en: {
@@ -172,7 +177,7 @@ const TRANSLATIONS = {
         submitBtn: "Submit Answer",
         gpsSuccess: "✓ You arrived! Look around to answer.",
         gpsError: "❌ You are not close enough. Follow the map!",
-        wrongAnswer: "❌ Wrong answer, look carefully at the monument!",
+        wrongAnswer: "❌ Wrong answer, look closely or use a hint!",
         timeOver: "⏱️ Time is up!"
     }
 };
@@ -181,7 +186,7 @@ const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
         theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
-        image: "colmar.jpg",
+        image: "https://images.unsplash.com/photo-1543872084-c7bd3822856f?q=80&w=800",
         desc: { 
             fr: "Parcourez le centre historique de Colmar guidé par une carte interactive. À chaque monument, validez votre position, observez les détails sculptés et découvrez l'histoire fascinante de la ville.",
             en: "Explore Colmar's historic center with an interactive map. At each monument, check your position, observe sculpted details, and discover the town's history."
@@ -201,14 +206,15 @@ const GAMES = {
                     en: "Observe the sculptures around the door. One figure holds a sharp mason tool instead of a book. What tool is it?" 
                 },
                 
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg/800px-Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg",
+                photo: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=800",
                 
                 history: {
                     fr: "Cette hachette (ou erminette) rappelle le rôle fondamental des tailleurs de pierre. En construisant la Collégiale entre 1234 et 1365, ces artisans gravaient leur marque personnelle dans le grès rose pour percevoir leur salaire. Cette figure rend hommage aux bâtisseurs anonymes du gothique alsacien !",
                     en: "This axe symbolizes the crucial role of medieval stonemasons who built St. Martin's Church between 1234 and 1365. Masons carved personal marks on every stone to get paid. This figure honors the anonymous craftsmen of Alsatian Gothic architecture!"
                 },
 
-                hint: { fr: "C'est un outil à manche servant à tailler la pierre ou couper le bois.", en: "It is a hand tool used for cutting stone or wood." },
+                hint1: { fr: "Regardez attentivement l'archivolte (la voûte sculptée) juste au-dessus du portail. L'outil possède un manche et sert à couper.", en: "Look closely at the arch above the door. The tool has a handle and is used for cutting." },
+                hint2: { fr: "Le mot recherché est : HACHE", en: "The word you are looking for is: AXE" },
                 answer: ["hache", "l'hache", "une hache", "erminette", "hachette"]
             },
             {
@@ -225,14 +231,15 @@ const GAMES = {
                     en: "At the top, the bronze statue holds a vessel related to Alsace's most famous drink. What is this product?" 
                 },
                 
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg/800px-Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg",
+                photo: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=800",
                 
                 history: {
                     fr: "Construite en 1609 pour le marchand Anton Burger, la Maison des Têtes comporte 106 masques en pierre grotesque. Au sommet du pignon se dresse la statue du Tonnelier créée en 1902 par Auguste Bartholdi, le célèbre sculpteur colmarien créateur de la Statue de la Liberté à New York !",
                     en: "Built in 1609 for merchant Anton Burger, the House of Heads features 106 grotesque stone masks. The top bronze Cooper statue was sculpted in 1902 by Auguste Bartholdi, the famous sculptor from Colmar who created the Statue of Liberty in New York!"
                 },
 
-                hint: { fr: "Pensez au liquide produit par les vignerons alsaciens conservé dans des tonneaux.", en: "Think of the drink made by local winemakers kept in barrels." },
+                hint1: { fr: "C'est le Tonnelier tout en haut. Pensez au liquide produit par les vignerons locaux.", en: "It is the Cooper at the top. Think of the beverage made by winemakers." },
+                hint2: { fr: "Le mot recherché est : VIN", en: "The word you are looking for is: WINE" },
                 answer: ["vin", "le vin", "biere", "la biere", "vin d'alsace"]
             },
             {
@@ -249,14 +256,15 @@ const GAMES = {
                     en: "Look at the crest carved above the vaulted passage. Which mythical creature (half eagle, half lion) protects Colmar's seal?" 
                 },
                 
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Ko%C3%AFfhus_Colmar.jpg/800px-Ko%C3%AFfhus_Colmar.jpg",
+                photo: "https://images.unsplash.com/photo-1548625361-188b8e0e0e0a?q=80&w=800",
                 
                 history: {
                     fr: "Achevé en 1480, le Koïfhus est le plus ancien bâtiment public profane de Colmar. Toutes les marchandises importées y étaient taxées. Le Griffon sculpté au-dessus de la voûte symbolise la vigilance : la force du lion pour défendre les coffres et la vision de l'aigle pour débusquer la fraude !",
                     en: "Completed in 1480, Koïfhus is Colmar's oldest public secular building. Imported goods were taxed here. The Griffon above the arch symbolizes vigilance: lion strength to protect chests and eagle vision to catch smugglers!"
                 },
 
-                hint: { fr: "Créature légendaire ailée avec un corps de lion.", en: "Legendary winged creature with a lion body." },
+                hint1: { fr: "Créature mythologique ailée possédant des serres d'aigle et un corps de lion.", en: "Mythological winged creature with eagle talons and lion body." },
+                hint2: { fr: "Le mot recherché est : GRIFFON", en: "The word you are looking for is: GRYPHON" },
                 answer: ["griffon", "le griffon", "griffin", "un griffon"]
             },
             {
@@ -273,14 +281,15 @@ const GAMES = {
                     en: "Which traditional sauerkraut vegetable was transported by these flat boats?" 
                 },
                 
-                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Petite_Venise_Colmar.jpg/800px-Petite_Venise_Colmar.jpg",
+                photo: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800",
                 
                 history: {
                     fr: "Le Quai de la Poissonnerie était le centre névralgique des pêcheurs et maraîchers. Ces derniers transportaient des tonnes de choux à bord de barques à fond plat naviguant sur la Lauch. La fermentation du chou en choucroute permettait de conserver des vitamines précieuses durant tout l'hiver !",
                     en: "Quai de la Poissonnerie was the home of fishermen and boatmen. They transported tons of cabbages on flat boats along the Lauch river. Fermenting cabbage into sauerkraut provided essential vitamins through harsh winters!"
                 },
 
-                hint: { fr: "C'est le légume de base de la Choucroute.", en: "It is the main vegetable used in Sauerkraut." },
+                hint1: { fr: "C'est l'ingrédient végétal principal servant à faire la Choucroute.", en: "It is the main vegetable used to make Sauerkraut." },
+                hint2: { fr: "Le mot recherché est : CHOU", en: "The word you are looking for is: CABBAGE" },
                 answer: ["chou", "le chou", "choux", "les choux"]
             }
         ]
@@ -390,35 +399,45 @@ function loadStep(index) {
     document.getElementById('step-indicator').innerText = `Étape ${index + 1}/${currentGame.steps.length}`;
     document.getElementById('step-title').innerText = getText(step.title);
     
-    // Texte de localisation
     document.getElementById('step-location-text').innerText = getText(step.location_text);
 
-    // Mise à jour de la carte OpenStreetMap embarquée
     const lat = step.coords.lat;
     const lng = step.coords.lng;
     document.getElementById('map-frame').src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.003}%2C${lat-0.002}%2C${lng+0.003}%2C${lat+0.002}&layer=mapnik&marker=${lat}%2C${lng}`;
     document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
-    // Énigme d'observation
     document.getElementById('step-riddle').innerText = getText(step.riddle);
     
-    // Reset de l'interface
+    // Reset UI
     document.getElementById('history-block').classList.add('hidden');
     document.getElementById('submit-btn').classList.remove('hidden');
     document.getElementById('riddle-answer').classList.remove('hidden');
     document.getElementById('riddle-answer').value = "";
+    document.getElementById('hints-container').classList.remove('hidden');
     
+    document.getElementById('hint-btn-1').classList.remove('hidden');
     document.getElementById('hint-text-1').classList.add('hidden');
     document.getElementById('hint-text-1').innerText = "";
+    
+    document.getElementById('hint-btn-2').classList.add('hidden');
+    document.getElementById('hint-text-2').classList.add('hidden');
+    document.getElementById('hint-text-2').innerText = "";
 }
 
-function showHint() {
+function showHint(level) {
     const step = currentGame.steps[currentStepIndex];
     if (!step) return;
     
-    const hintBox1 = document.getElementById('hint-text-1');
-    hintBox1.innerText = getText(step.hint);
-    hintBox1.classList.remove('hidden');
+    if (level === 1) {
+        const hintBox1 = document.getElementById('hint-text-1');
+        hintBox1.innerText = getText(step.hint1);
+        hintBox1.classList.remove('hidden');
+        document.getElementById('hint-btn-2').classList.remove('hidden');
+    } else if (level === 2) {
+        const hintBox2 = document.getElementById('hint-text-2');
+        hintBox2.innerText = getText(step.hint2);
+        hintBox2.classList.remove('hidden');
+    }
 }
 
 function checkGPS() {
@@ -507,11 +526,9 @@ function submitAnswer() {
         status.className = "status-msg success";
         status.innerText = "✓ Bonne réponse !";
         
-        // Cacher formulaire et afficher la photo + explication
         document.getElementById('submit-btn').classList.add('hidden');
         document.getElementById('riddle-answer').classList.add('hidden');
-        document.getElementById('hint-btn-1').classList.add('hidden');
-        document.getElementById('hint-text-1').classList.add('hidden');
+        document.getElementById('hints-container').classList.add('hidden');
 
         const historyBox = document.getElementById('history-block');
         document.getElementById('step-photo').src = step.photo;
