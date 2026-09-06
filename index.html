@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeu de Piste</title>
+    <title>Jeu de Piste & Escape Game</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -36,6 +36,11 @@
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
         
+        /* Sélecteur de difficulté */
+        .difficulty-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .diff-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: var(--text-muted); font-weight: 600; cursor: pointer; text-align: center; font-size: 0.85rem; }
+        .diff-btn.active { border-color: var(--accent); color: var(--accent); background: #1e293b; }
+
         /* Boutons */
         .btn { width: 100%; background: var(--accent); color: var(--bg-color); border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
         .btn:active { opacity: 0.8; }
@@ -53,9 +58,12 @@
         .status-msg.success { color: var(--success); }
         
         .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 10px; color: #f1f5f9; font-size: 0.85rem; line-height: 1.4; }
-        
-        /* Banner Mode Admin */
         .admin-badge { background: #581c87; color: #e9d5ff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px solid var(--admin); }
+        .diff-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
+        .diff-tag.easy { background: #15803d; color: #bbf7d0; }
+        .diff-tag.hard { background: #b91c1c; color: #fecaca; }
+        
+        .location-card { background: #0f172a; border: 1px solid #38bdf8; padding: 14px; border-radius: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -77,12 +85,19 @@
         <button class="btn btn-outline" onclick="loadGame('vigne')">La vigne de l'horreur</button>
     </div>
 
-    <!-- VUE 2 : Présentation du jeu sélectionné -->
+    <!-- VUE 2 : Présentation & Choix de difficulté -->
     <div id="view-intro" class="card hidden">
         <img id="game-banner" class="game-banner hidden" src="" alt="Illustration du jeu">
         <h1 id="game-title">--</h1>
         <p id="game-theme"></p>
         <p id="game-desc"></p>
+        
+        <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 8px;">NIVEAU DE DIFFICULTÉ :</label>
+        <div class="difficulty-selector">
+            <div id="btn-diff-easy" class="diff-btn active" onclick="setDifficulty('easy')">🌱 Facile<br><span style="font-size: 0.7rem; font-weight: normal;">Lieux guidés</span></div>
+            <div id="btn-diff-hard" class="diff-btn" onclick="setDifficulty('hard')">🔥 Escape Game<br><span style="font-size: 0.7rem; font-weight: normal;">Lieux codés & Déductions</span></div>
+        </div>
+
         <button class="btn" onclick="startGame()" data-i18n="startBtn">Commencer la partie</button>
     </div>
 
@@ -95,28 +110,34 @@
             <span id="step-indicator">Étape 1/4</span>
         </div>
 
+        <span id="diff-tag-display" class="diff-tag easy">🌱 NIVEAU FACILE</span>
+
         <h1 id="step-title">--</h1>
-        <p id="step-story"></p>
         
-        <!-- Bloc Vérification GPS -->
+        <!-- Indice d'Orientation / Localisation -->
+        <div class="location-card">
+            <p style="color: #38bdf8; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 5px;">🗺️ Énigme de Localisation :</p>
+            <p id="step-location-riddle" style="color: var(--text-main); font-size: 0.9rem; font-style: italic; margin-bottom: 0;"></p>
+        </div>
+
+        <!-- Bloc GPS -->
         <div id="gps-block" style="margin-bottom: 15px;">
-            <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Vérifier ma position</button>
+            <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Valider mon arrivée sur place</button>
             <div id="gps-status" class="status-msg"></div>
         </div>
 
-        <!-- Bloc Énigme -->
+        <!-- Bloc Énigme finale sur place -->
         <div id="riddle-block" class="hidden">
-            <p style="color: #38bdf8; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-size: 0.8rem;">🧩 Énigme du Saint-Esprit</p>
+            <p style="color: #22c55e; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; font-size: 0.8rem;">🧩 Énigme du Sceau (Sur Place)</p>
             <p style="color: var(--text-main); font-weight: 500; margin-bottom: 12px; line-height: 1.5;" id="step-riddle"></p>
             
             <input type="text" id="riddle-answer" placeholder="Entrez la réponse ou le mot secret...">
             <button class="btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
             
-            <!-- Système d'indices graduels -->
             <button class="btn btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Indice 1 : Piste de réflexion</button>
             <div id="hint-text-1" class="hint-box hidden"></div>
 
-            <button class="btn btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Indice 2 : Solution presque donnée</button>
+            <button class="btn btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Indice 2 : Nom du lieu ou réponse</button>
             <div id="hint-text-2" class="hint-box hidden"></div>
 
             <button id="skip-btn" class="btn btn-skip hidden" onclick="skipStep()">⏩ Passer cette étape (Admin)</button>
@@ -124,7 +145,6 @@
             <div id="answer-status" class="status-msg"></div>
         </div>
 
-        <!-- Pied de page : Activation du mode Admin -->
         <div style="margin-top: 25px; text-align: center;">
             <button style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline;" onclick="toggleAdminMode()">⚙️ Mode Admin / Test</button>
         </div>
@@ -134,28 +154,29 @@
 <script>
 const ADMIN_CODE = "1234";
 let isAdminMode = false;
+let selectedDifficulty = 'easy';
 
 const TRANSLATIONS = {
     fr: {
         selectGameTitle: "Choisissez votre aventure",
         selectGameDesc: "Scannez un QR code ou sélectionnez un jeu ci-dessous :",
         startBtn: "Commencer la partie (1h30)",
-        gpsBtn: "📍 Vérifier ma position GPS",
+        gpsBtn: "📍 Valider mon arrivée sur place",
         submitBtn: "Valider la réponse",
-        gpsSuccess: "✓ Vous êtes au bon endroit !",
-        gpsError: "❌ Vous êtes trop loin du lieu. Rapprochez-vous !",
-        wrongAnswer: "❌ Mauvaise réponse, réfléchissez bien à l'énigme.",
+        gpsSuccess: "✓ Position validée ! Vous êtes sur le bon lieu.",
+        gpsError: "❌ Vous n'êtes pas au bon endroit. Réfléchissez à l'énigme de localisation !",
+        wrongAnswer: "❌ Mauvaise réponse, réessayez !",
         timeOver: "⏱️ Temps écoulé !"
     },
     en: {
         selectGameTitle: "Choose your adventure",
         selectGameDesc: "Scan a QR code or select a game below:",
         startBtn: "Start the game (1h30)",
-        gpsBtn: "📍 Check my GPS position",
+        gpsBtn: "📍 Check location arrival",
         submitBtn: "Submit Answer",
-        gpsSuccess: "✓ You are at the right spot!",
-        gpsError: "❌ You are too far away. Get closer!",
-        wrongAnswer: "❌ Wrong answer, think carefully.",
+        gpsSuccess: "✓ Location confirmed! You are at the right spot.",
+        gpsError: "❌ Wrong location. Think carefully about the location riddle!",
+        wrongAnswer: "❌ Wrong answer, try again!",
         timeOver: "⏱️ Time is up!"
     }
 };
@@ -166,92 +187,66 @@ const GAMES = {
         theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
         image: "colmar.jpg",
         desc: { 
-            fr: "L'esprit du Père Fouettard (Hans Trapp) a enfermé la lumière de Noël dans un coffre sacré. Pour retrouver la Clef d'Or, vous devez résoudre 4 devinettes basées sur les secrets cachés des plus célèbres monuments de Colmar.",
-            en: "Knecht Ruprecht trapped the Christmas light in a sacred chest. Solve 4 riddles on Colmar's secrets to find the Golden Key."
+            fr: "L'esprit du Père Fouettard (Hans Trapp) a enfermé la lumière de Noël. Retrouvez les 4 lieux sacrés de Colmar et résolvez leurs secrets pour libérer la Clef d'Or.",
+            en: "Knecht Ruprecht trapped the Christmas light. Find the 4 sacred spots in Colmar to recover the Golden Key."
         },
         steps: [
             {
-                title: { fr: "Étape 1 : La Griffe du Tailleur de Pierre", en: "Step 1: The Stonemason's Mark" },
-                story: { 
-                    fr: "Vous êtes devant la Collégiale Saint-Martin. Au Moyen Âge, les tailleurs de pierre qui construisaient les églises laissaient leur 'signature' secrète (les marques de tâcheron) gravée dans le grès rose pour être payés. Hans Trapp a dissimulé le premier symbole sous l'un des gardiens de la pierre.", 
-                    en: "At St. Martin's Church, medieval stonemasons carved secret signatures into the pink sandstone. Hans Trapp hid the first symbol here." 
-                },
+                title: { fr: "Étape 1 : Le Sceau du Bâtisseur", en: "Step 1: The Builder's Seal" },
                 coords: { lat: 48.0772, lng: 7.3582 },
-                riddle: { 
-                    fr: "Sur le portail Sud (Porte Saint-Nicolas), observez les figures. L'une d'elles ne tient ni livre ni sceptre, mais un outil tranchant de charpentier ou tailleur. De quel outil s'agit-il ?", 
-                    en: "On the South portal, one figure holds neither book nor scepter, but a sharp craftsman tool. What tool is it?" 
-                },
-                hint1: {
-                    fr: "C'est un outil tranchant à manche utilisé par les bâtisseurs pour couper le bois ou tailler la pierre.",
-                    en: "It is a sharp tool with a handle used by builders to cut wood or stone."
-                },
-                hint2: {
-                    fr: "C'est une 'Hache' (ou erminette).",
-                    en: "It is an 'Axe'."
-                },
+                
+                // Énigme pour trouver le LIEU
+                loc_easy: { fr: "Rendez-vous devant la Collégiale Saint-Martin (Place de la Cathédrale), au niveau du portail Sud.", en: "Head to St. Martin's Church at the South portal." },
+                loc_hard: { fr: "« Je suis le géant de grès rose qui domine le cœur de Colmar. Ma tour inachevée porte la lanterne des morts. Trouvez mon flanc Sud, là où le soleil frappe à mi-journée. »", en: "« I am the pink sandstone giant dominating Colmar. Find my South side where the mid-day sun hits. »" },
+                
+                // Énigme SUR PLACE
+                riddle_easy: { fr: "Sur les sculptures du portail, l'une des figures tient un outil tranchant de maçon au lieu d'un livre. Quel est cet outil ?", en: "On the sculptures, one figure holds a sharp mason tool instead of a book. What tool is it?" },
+                riddle_hard: { fr: "« Je ne tranche ni le pain du banquet, ni le bois de chauffage, mais j'ai taillé la pierre de ce temple. Le bâtisseur sans couronne me tient fermement sur la voûte. » Nommez cet outil.", en: "« I slice neither bread nor firewood, but I shaped the stones of this temple. Name the tool held on the arch. »" },
+                
+                hint1: { fr: "Indice Lieu : Il s'agit de la grande église/cathédrale en pierre rose au centre-ville.", en: "Location hint: It is the large pink stone cathedral in the city center." },
+                hint2: { fr: "Indice Réponse : L'outil est une 'Hache'.", en: "Answer hint: The tool is an 'Axe'." },
                 answer: ["hache", "l'hache", "une hache", "erminette", "hachette"]
             },
             {
-                title: { fr: "Étape 2 : Le Secret Culinaires des Masques", en: "Step 2: The Culinary Secret of the Masks" },
-                story: { 
-                    fr: "Arrivés au 19 Rue des Têtes devant la Maison des Têtes. Parmi ses 106 visages grimaçants, Hans Trapp a cherché la statue qui symbolise la gourmandise alsacienne préférée de Saint-Nicolas.", 
-                    en: "At 19 Rue des Têtes, among 106 stone faces, Hans Trapp sought the statue symbolizing St. Nicholas' favorite Alsatian treat." 
-                },
+                title: { fr: "Étape 2 : Le Secret des Cent Visages", en: "Step 2: The Secret of a Hundred Faces" },
                 coords: { lat: 48.0786, lng: 7.3556 },
-                riddle: { 
-                    fr: "Regardez tout au sommet du pignon : la statue créée par Auguste Bartholdi ne tient pas une épée, mais un objet lié à la plus célèbre boisson d'Alsace. Quel est ce produit local ?", 
-                    en: "Look at the very top: the statue holds an object related to Alsace's most famous drink. What local product is it?" 
-                },
-                hint1: {
-                    fr: "Il s'agit de la statue du Tonnelier. Pensez au liquide ambré ou fruité que l'on conserve dans ces fûts en bois.",
-                    en: "This is the Cooper's statue. Think of the beverage kept in wooden barrels."
-                },
-                hint2: {
-                    fr: "Le mot recherché est le 'Vin' (ou le 'Vin d'Alsace' / 'Bière').",
-                    en: "The word is 'Wine'."
-                },
+                
+                loc_easy: { fr: "Rendez-vous au 19 Rue des Têtes, devant la célèbre Maison des Têtes.", en: "Go to 19 Rue des Têtes, in front of the House of Heads." },
+                loc_hard: { fr: "« 106 paires d'yeux de pierre vous observent depuis cette façade de 1609. Trouvez la demeure où les têtes grimaçantes entourent le roi du tonneau au sommet du pignon. »", en: "« 106 pairs of stone eyes watch you from this 1609 facade. Find the house where grimacing heads surround the barrel king. »" },
+                
+                riddle_easy: { fr: "La statue en bronze au sommet créée par Bartholdi tient un objet lié à la plus célèbre boisson d'Alsace. Quel est ce produit ?", en: "The top statue holds an object related to Alsace's most famous drink. What is this product?" },
+                riddle_hard: { fr: "« Nais dans la terre de la plaine, dors des mois dans le chêne sombre, et libère la joie au banquet de Saint-Nicolas. Le Tonnelier de bronze garde mon symbole. » Quel est ce breuvage ?", en: "« Born in the soil, sleeping in dark oak, releasing joy at St. Nicholas' feast. What beverage am I? »" },
+                
+                hint1: { fr: "Indice Lieu : Cherchez le bâtiment Rue des Têtes.", en: "Location hint: Look for the building on Rue des Têtes." },
+                hint2: { fr: "Indice Réponse : La réponse est le 'Vin'.", en: "Answer hint: The answer is 'Wine'." },
                 answer: ["vin", "le vin", "biere", "la biere", "vin d'alsace"]
             },
             {
-                title: { fr: "Étape 3 : Le Passage Secret du Marchand", en: "Step 3: The Merchant's Secret Passage" },
-                story: { 
-                    fr: "Bienvenue au Koïfhus (Ancienne Douane). C'est ici que transitaient toutes les marchandises précieuses du Moyen Âge. Pour échapper aux gardes, Hans Trapp empruntait un passage sous une arche gravée.", 
-                    en: "Welcome to Koïfhus. All medieval merchant goods passed here. Hans Trapp escaped under an engraved arch." 
-                },
+                title: { fr: "Étape 3 : La Porte des Marchands", en: "Step 3: The Merchant Gate" },
                 coords: { lat: 48.0758, lng: 7.3592 },
-                riddle: { 
-                    fr: "Cherchez les armoiries gravées au-dessus du grand passage voûté traversant le bâtiment. Quel animal mythique (à corps de lion et tête d'aigle) y protège le sceau de Colmar ?", 
-                    en: "Look at the coat of arms above the vaulted passage. Which mythical creature (lion body, eagle head) protects Colmar's seal?" 
-                },
-                hint1: {
-                    fr: "Créature fantastique très courante dans l'héraldique médiévale, mi-aigle mi-lion.",
-                    en: "A mythical creature, half eagle, half lion."
-                },
-                hint2: {
-                    fr: "Il s'agit du 'Griffon'.",
-                    en: "It is the 'Gryphon'."
-                },
+                
+                loc_easy: { fr: "Rendez-vous à l'Ancienne Douane (Koïfhus), Place de l'Ancienne Douane.", en: "Head to the Old Custom House (Koïfhus)." },
+                loc_hard: { fr: "« Cœur économique du Moyen Âge, toutes les étoffes et épices passaient sous mes tuiles vernissées. Trouvez le bâtiment gothique traversé par une ruelle voûtée. »", en: "« Economic heart of the Middle Ages, all spices and fabrics passed under my glazed tiles. Find the gothic building crossed by a vaulted alley. »" },
+                
+                riddle_easy: { fr: "Observez les armoiries sculptées au-dessus du passage voûté. Quel animal fantastique (mi-aigle, mi-lion) y figure ?", en: "Look at the coat of arms above the arch. Which mythical creature (half eagle, half lion) is shown?" },
+                riddle_hard: { fr: "« J'ai les serres de l'aigle pour intercepter les fraudeurs et le corps du lion pour garder le trésor. Sculpté au-dessus de l'arche, je protège le blason de la ville. Qui suis-je ? »", en: "« I have eagle talons and a lion body. Carved above the arch, I protect the city seal. Who am I? »" },
+                
+                hint1: { fr: "Indice Lieu : Il s'agit du Koïfhus (Ancienne Douane).", en: "Location hint: It is the Koïfhus (Old Custom House)." },
+                hint2: { fr: "Indice Réponse : C'est un 'Griffon'.", en: "Answer hint: It is a 'Gryphon'." },
                 answer: ["griffon", "le griffon", "griffin", "un griffon"]
             },
             {
-                title: { fr: "Étape 4 : L'Énigme des Bateliers Gelés", en: "Step 4: The Mystery of the Frozen Boatmen" },
-                story: { 
-                    fr: "Vous voici au Quai de la Poissonnerie, au cœur de la Petite Venise. C'est d'ici que les maraîchers et pêcheurs partaient en barque à fond plat pour livrer les marchés de Noël.", 
-                    en: "At Quai de la Poissonnerie (Little Venice), fishermen used flat-bottom boats to reach Christmas markets." 
-                },
+                title: { fr: "Étape 4 : Le Miroir d'Eau", en: "Step 4: The Water Mirror" },
                 coords: { lat: 48.0742, lng: 7.3597 },
-                riddle: { 
-                    fr: "Saint-Nicolas a caché l'ultime Clef d'Or là où l'on mesurait autrefois le niveau de l'eau. Observez le pont : quel légume emblématique de la choucroute alsacienne était autrefois transporté en abondance par ces bateaux ?", 
-                    en: "St. Nicholas hid the Golden Key where water was measured. Which iconic sauerkraut vegetable was carried on these boats?" 
-                },
-                hint1: {
-                    fr: "C'est l'ingrédient principal qui, une fois fermenté, donne la célèbre Choucroute alsacienne.",
-                    en: "It is the main vegetable used to make sauerkraut."
-                },
-                hint2: {
-                    fr: "La réponse est le 'Chou'.",
-                    en: "The answer is 'Cabbage'."
-                },
+                
+                loc_easy: { fr: "Rendez-vous au pont du Quai de la Poissonnerie, au cœur de la Petite Venise.", en: "Go to the bridge at Quai de la Poissonnerie in Little Venice." },
+                loc_hard: { fr: "« Là où la rivière Lauch lèche les façades à colombages, trouvez le pont où les pêcheurs et maraîchers accostaient leurs barques à fond plat. »", en: "« Where the Lauch river washes timbered facades, find the bridge where fishermen docked flat boats. »" },
+                
+                riddle_easy: { fr: "Quel légume traditionnel de la choucroute alsacienne était autrefois transporté en masse par ces barques ?", en: "Which traditional sauerkraut vegetable was transported by these boats?" },
+                riddle_hard: { fr: "« Vert dans les champs du Ried, blanc fermenté dans le sel, je suis le roi du plat qui réchauffe l'hiver colmarien. Quel légume les bateliers transportaient-ils ici ? »", en: "« Green in fields, white fermented in salt, I am the king of Alsatian winter dishes. What vegetable was carried here? »" },
+                
+                hint1: { fr: "Indice Lieu : Suivez la rivière vers la Petite Venise.", en: "Location hint: Follow the river to Little Venice." },
+                hint2: { fr: "Indice Réponse : C'est le 'Chou'.", en: "Answer hint: It is 'Cabbage'." },
                 answer: ["chou", "le chou", "choux", "les choux"]
             }
         ]
@@ -260,10 +255,7 @@ const GAMES = {
         title: { fr: "La vigne de l'horreur", en: "The Vineyard of Horror" },
         theme: { fr: "🍷 Thriller & Légendes sombres", en: "🍷 Thriller & Dark Legends" },
         image: "",
-        desc: { 
-            fr: "Une malédiction pèse sur le vignoble... Élucidez le mystère avant la tombée de la nuit.",
-            en: "A curse weighs upon the vineyard... Unravel the mystery before nightfall."
-        },
+        desc: { fr: "Une malédiction pèse sur le vignoble...", en: "A curse weighs upon the vineyard..." },
         steps: []
     }
 };
@@ -274,6 +266,12 @@ let currentStepIndex = 0;
 let timerInterval = null;
 let timeRemaining = 90 * 60;
 
+function setDifficulty(diff) {
+    selectedDifficulty = diff;
+    document.getElementById('btn-diff-easy').classList.toggle('active', diff === 'easy');
+    document.getElementById('btn-diff-hard').classList.toggle('active', diff === 'hard');
+}
+
 function toggleAdminMode() {
     if (!isAdminMode) {
         const pwd = prompt("Saisissez le code d'accès administrateur :");
@@ -281,7 +279,7 @@ function toggleAdminMode() {
             isAdminMode = true;
             document.getElementById('admin-indicator').classList.remove('hidden');
             document.getElementById('skip-btn').classList.remove('hidden');
-            alert("✅ Mode Admin activé ! Le GPS sera contourné et vous pouvez passer les étapes.");
+            alert("✅ Mode Admin activé !");
         } else {
             alert("❌ Code incorrect.");
         }
@@ -305,7 +303,6 @@ function changeLanguage() {
 function loadGame(gameId) {
     currentGame = GAMES[gameId];
     if (!currentGame) return;
-    
     document.getElementById('view-selection').classList.add('hidden');
     document.getElementById('view-intro').classList.remove('hidden');
     updateUI();
@@ -319,7 +316,6 @@ function getText(obj) {
 
 function updateUI() {
     if (!currentGame) return;
-    
     document.getElementById('game-title').innerText = getText(currentGame.title);
     document.getElementById('game-theme').innerText = getText(currentGame.theme);
     document.getElementById('game-desc').innerText = getText(currentGame.desc);
@@ -336,6 +332,16 @@ function updateUI() {
 function startGame() {
     document.getElementById('view-intro').classList.add('hidden');
     document.getElementById('view-game').classList.remove('hidden');
+    
+    const tag = document.getElementById('diff-tag-display');
+    if (selectedDifficulty === 'easy') {
+        tag.className = "diff-tag easy";
+        tag.innerText = "🌱 NIVEAU FACILE (Explorateur)";
+    } else {
+        tag.className = "diff-tag hard";
+        tag.innerText = "🔥 NIVEAU DIFFICILE (Escape Game)";
+    }
+
     if (!timerInterval) {
         timerInterval = setInterval(updateTimer, 1000);
     }
@@ -364,8 +370,18 @@ function loadStep(index) {
     
     document.getElementById('step-indicator').innerText = `Étape ${index + 1}/${currentGame.steps.length}`;
     document.getElementById('step-title').innerText = getText(step.title);
-    document.getElementById('step-story').innerText = getText(step.story);
-    document.getElementById('step-riddle').innerText = getText(step.riddle);
+    
+    // Énigme de localisation
+    const locText = (selectedDifficulty === 'hard' && step.loc_hard) 
+        ? getText(step.loc_hard) 
+        : getText(step.loc_easy);
+    document.getElementById('step-location-riddle').innerText = locText;
+
+    // Énigme sur place
+    const riddleText = (selectedDifficulty === 'hard' && step.riddle_hard) 
+        ? getText(step.riddle_hard) 
+        : getText(step.riddle_easy);
+    document.getElementById('step-riddle').innerText = riddleText;
     
     // Reset indices
     document.getElementById('hint-text-1').classList.add('hidden');
@@ -396,7 +412,7 @@ function checkGPS() {
     
     if (isAdminMode) {
         status.className = "status-msg success";
-        status.innerText = "⚡ Mode Test : Géolocalisation simulée avec succès !";
+        status.innerText = "⚡ Mode Test : Position simulée avec succès !";
         document.getElementById('gps-block').classList.add('hidden');
         document.getElementById('riddle-block').classList.remove('hidden');
         return;
@@ -452,7 +468,7 @@ function nextStepOrFinish() {
         document.getElementById('answer-status').innerText = "";
         loadStep(currentStepIndex + 1);
     } else {
-        alert("🎉 Félicitations ! Vous avez percé les secrets de Colmar, retrouvé la Clef d'Or et sauvé la magie de Noël !");
+        alert("🎉 Félicitations ! Vous avez accompli la quête et libéré la lumière de Noël !");
     }
 }
 
@@ -475,7 +491,7 @@ function submitAnswer() {
 
     if (isCorrect) {
         status.className = "status-msg success";
-        status.innerText = "✓ Excellente déduction ! Le sortilège s'affaiblit...";
+        status.innerText = "✓ Excellente résolution ! Le sortilège s'affaiblit...";
         document.getElementById('riddle-answer').value = "";
         
         setTimeout(() => {
