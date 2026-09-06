@@ -58,6 +58,7 @@
         .status-msg.success { color: var(--success); }
         
         .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 10px; color: #f1f5f9; font-size: 0.85rem; line-height: 1.4; }
+        .history-box { background: #064e3b; border: 1px solid var(--success); padding: 14px; border-radius: 10px; margin-top: 15px; color: #ecfdf5; font-size: 0.88rem; line-height: 1.5; }
         .admin-badge { background: #581c87; color: #e9d5ff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px solid var(--admin); }
         .diff-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
         .diff-tag.easy { background: #15803d; color: #bbf7d0; }
@@ -132,7 +133,14 @@
             <p style="color: var(--text-main); font-weight: 500; margin-bottom: 12px; line-height: 1.5;" id="step-riddle"></p>
             
             <input type="text" id="riddle-answer" placeholder="Entrez la réponse ou le mot secret...">
-            <button class="btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
+            <button class="btn" id="submit-btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
+
+            <!-- Bloc Anecdote Historique Post-Validation -->
+            <div id="history-block" class="history-box hidden">
+                <p style="font-weight: 700; color: #a7f3d0; margin-bottom: 6px;">📜 LE SAVIEZ-VOUS ?</p>
+                <p id="history-text" style="color: #ecfdf5; margin-bottom: 12px;"></p>
+                <button class="btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Passer à l'étape suivante ➔</button>
+            </div>
             
             <button class="btn btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Indice 1 : Piste de réflexion</button>
             <div id="hint-text-1" class="hint-box hidden"></div>
@@ -195,14 +203,17 @@ const GAMES = {
                 title: { fr: "Étape 1 : Le Sceau du Bâtisseur", en: "Step 1: The Builder's Seal" },
                 coords: { lat: 48.0772, lng: 7.3582 },
                 
-                // Énigme pour trouver le LIEU
                 loc_easy: { fr: "Rendez-vous devant la Collégiale Saint-Martin (Place de la Cathédrale), au niveau du portail Sud.", en: "Head to St. Martin's Church at the South portal." },
                 loc_hard: { fr: "« Je suis le géant de grès rose qui domine le cœur de Colmar. Ma tour inachevée porte la lanterne des morts. Trouvez mon flanc Sud, là où le soleil frappe à mi-journée. »", en: "« I am the pink sandstone giant dominating Colmar. Find my South side where the mid-day sun hits. »" },
                 
-                // Énigme SUR PLACE
                 riddle_easy: { fr: "Sur les sculptures du portail, l'une des figures tient un outil tranchant de maçon au lieu d'un livre. Quel est cet outil ?", en: "On the sculptures, one figure holds a sharp mason tool instead of a book. What tool is it?" },
                 riddle_hard: { fr: "« Je ne tranche ni le pain du banquet, ni le bois de chauffage, mais j'ai taillé la pierre de ce temple. Le bâtisseur sans couronne me tient fermement sur la voûte. » Nommez cet outil.", en: "« I slice neither bread nor firewood, but I shaped the stones of this temple. Name the tool held on the arch. »" },
                 
+                history: {
+                    fr: "Cette hachette (ou erminette) représente le rôle fondamental des tailleurs de pierre au Moyen Âge. En façonnant la Collégiale Saint-Martin entre 1234 et 1365, ces artisans gravaient leur marque personnelle sur chaque pierre taillée pour comptabiliser leur salaire. Cette figure rend hommage aux bâtisseurs anonymes qui ont érigé ce chef-d'œuvre du gothique alsacien !",
+                    en: "This axe symbolizes the crucial role of medieval stonemasons who built St. Martin's Church between 1234 and 1365. Masons carved personal marks on every stone to get paid. This figure honors the anonymous craftsmen of Alsatian Gothic architecture!"
+                },
+
                 hint1: { fr: "Indice Lieu : Il s'agit de la grande église/cathédrale en pierre rose au centre-ville.", en: "Location hint: It is the large pink stone cathedral in the city center." },
                 hint2: { fr: "Indice Réponse : L'outil est une 'Hache'.", en: "Answer hint: The tool is an 'Axe'." },
                 answer: ["hache", "l'hache", "une hache", "erminette", "hachette"]
@@ -217,6 +228,11 @@ const GAMES = {
                 riddle_easy: { fr: "La statue en bronze au sommet créée par Bartholdi tient un objet lié à la plus célèbre boisson d'Alsace. Quel est ce produit ?", en: "The top statue holds an object related to Alsace's most famous drink. What is this product?" },
                 riddle_hard: { fr: "« Nais dans la terre de la plaine, dors des mois dans le chêne sombre, et libère la joie au banquet de Saint-Nicolas. Le Tonnelier de bronze garde mon symbole. » Quel est ce breuvage ?", en: "« Born in the soil, sleeping in dark oak, releasing joy at St. Nicholas' feast. What beverage am I? »" },
                 
+                history: {
+                    fr: "Construite en 1609 pour le marchand Anton Burger, la Maison des Têtes doit son nom aux 106 masques en pierre grotesque sculptés sur sa façade Renaissance. Au sommet du pignon, la statue du Tonnelier a été ajoutée en 1902 : elle a été réalisée par Auguste Bartholdi, le célèbre sculpteur colmarien créateur de la Statue de la Liberté à New York !",
+                    en: "Built in 1609 for merchant Anton Burger, the House of Heads features 106 grotesque stone masks. The top bronze Cooper statue was sculpted in 1902 by Auguste Bartholdi, the famous sculptor from Colmar who created the Statue of Liberty in New York!"
+                },
+
                 hint1: { fr: "Indice Lieu : Cherchez le bâtiment Rue des Têtes.", en: "Location hint: Look for the building on Rue des Têtes." },
                 hint2: { fr: "Indice Réponse : La réponse est le 'Vin'.", en: "Answer hint: The answer is 'Wine'." },
                 answer: ["vin", "le vin", "biere", "la biere", "vin d'alsace"]
@@ -231,6 +247,11 @@ const GAMES = {
                 riddle_easy: { fr: "Observez les armoiries sculptées au-dessus du passage voûté. Quel animal fantastique (mi-aigle, mi-lion) y figure ?", en: "Look at the coat of arms above the arch. Which mythical creature (half eagle, half lion) is shown?" },
                 riddle_hard: { fr: "« J'ai les serres de l'aigle pour intercepter les fraudeurs et le corps du lion pour garder le trésor. Sculpté au-dessus de l'arche, je protège le blason de la ville. Qui suis-je ? »", en: "« I have eagle talons and a lion body. Carved above the arch, I protect the city seal. Who am I? »" },
                 
+                history: {
+                    fr: "Achevé en 1480, le Koïfhus est le plus ancien bâtiment public profane de Colmar. Il servait de douane où toutes les marchandises importées devaient être déclarées et taxées. Le Griffon sculpté au-dessus de la voûte symbolise la vigilance financière de la ville : la force du lion pour défendre les coffres et la vision de l'aigle pour débusquer les contrebandiers !",
+                    en: "Completed in 1480, Koïfhus is Colmar's oldest public secular building. It acted as a customs house for imported goods. The Griffon above the arch symbolizes city vigilance: lion strength to protect chests and eagle vision to catch smugglers!"
+                },
+
                 hint1: { fr: "Indice Lieu : Il s'agit du Koïfhus (Ancienne Douane).", en: "Location hint: It is the Koïfhus (Old Custom House)." },
                 hint2: { fr: "Indice Réponse : C'est un 'Griffon'.", en: "Answer hint: It is a 'Gryphon'." },
                 answer: ["griffon", "le griffon", "griffin", "un griffon"]
@@ -245,6 +266,11 @@ const GAMES = {
                 riddle_easy: { fr: "Quel légume traditionnel de la choucroute alsacienne était autrefois transporté en masse par ces barques ?", en: "Which traditional sauerkraut vegetable was transported by these boats?" },
                 riddle_hard: { fr: "« Vert dans les champs du Ried, blanc fermenté dans le sel, je suis le roi du plat qui réchauffe l'hiver colmarien. Quel légume les bateliers transportaient-ils ici ? »", en: "« Green in fields, white fermented in salt, I am the king of Alsatian winter dishes. What vegetable was carried here? »" },
                 
+                history: {
+                    fr: "Le Quai de la Poissonnerie était le quartier névralgique de la corporation des pêcheurs et maraîchers de Colmar. Ces derniers cultivaient les terres fertiles du Ried et transportaient des tonnes de choux à bord de barques à fond plat naviguant sur la Lauch, directement vers les marchés. La fermentation du chou en choucroute permettait de conserver des vitamines durant les rigoureux hivers alsaciens !",
+                    en: "Quai de la Poissonnerie was the home of Colmar's fishermen and boatmen guild. They cultivated fertile lands and transported tons of cabbages on flat-bottom boats along the Lauch river. Fermenting cabbage into sauerkraut provided essential vitamins through harsh winters!"
+                },
+
                 hint1: { fr: "Indice Lieu : Suivez la rivière vers la Petite Venise.", en: "Location hint: Follow the river to Little Venice." },
                 hint2: { fr: "Indice Réponse : C'est le 'Chou'.", en: "Answer hint: It is 'Cabbage'." },
                 answer: ["chou", "le chou", "choux", "les choux"]
@@ -383,7 +409,12 @@ function loadStep(index) {
         : getText(step.riddle_easy);
     document.getElementById('step-riddle').innerText = riddleText;
     
-    // Reset indices
+    // Reset UI
+    document.getElementById('history-block').classList.add('hidden');
+    document.getElementById('submit-btn').classList.remove('hidden');
+    document.getElementById('riddle-answer').classList.remove('hidden');
+    document.getElementById('riddle-answer').value = "";
+    
     document.getElementById('hint-text-1').classList.add('hidden');
     document.getElementById('hint-text-1').innerText = "";
     document.getElementById('hint-text-2').classList.add('hidden');
@@ -491,12 +522,20 @@ function submitAnswer() {
 
     if (isCorrect) {
         status.className = "status-msg success";
-        status.innerText = "✓ Excellente résolution ! Le sortilège s'affaiblit...";
-        document.getElementById('riddle-answer').value = "";
+        status.innerText = "✓ Bonne réponse !";
         
-        setTimeout(() => {
-            nextStepOrFinish();
-        }, 1500);
+        // Cacher formulaire de validation et afficher anecdote historique
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('riddle-answer').classList.add('hidden');
+        document.getElementById('hint-btn-1').classList.add('hidden');
+        document.getElementById('hint-btn-2').classList.add('hidden');
+        document.getElementById('hint-text-1').classList.add('hidden');
+        document.getElementById('hint-text-2').classList.add('hidden');
+
+        const historyBox = document.getElementById('history-block');
+        document.getElementById('history-text').innerText = getText(step.history);
+        historyBox.classList.remove('hidden');
+
     } else {
         status.className = "status-msg error";
         status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
