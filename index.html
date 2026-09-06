@@ -31,8 +31,8 @@
         .hidden { display: none !important; }
         
         /* Images de présentation & d'histoire */
-        .game-banner { width: 100%; height: 200px; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
-        .step-photo { width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
+        .game-banner { width: 100%; height: auto; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
+        .step-photo { width: 100%; height: 240px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
 
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
@@ -125,9 +125,9 @@
             <input type="text" id="riddle-answer" placeholder="Entrez votre réponse...">
             <button class="btn" id="submit-btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
 
-            <!-- Bloc Histoire & Photo Post-Validation -->
+            <!-- Bloc Histoire & Photo Spécifique Post-Validation -->
             <div id="history-block" class="history-box hidden">
-                <img id="step-photo" class="step-photo" src="" alt="Photo du monument">
+                <img id="step-photo" class="step-photo" src="" alt="Détail du monument">
                 <p style="font-weight: 700; color: #a7f3d0; margin-bottom: 6px;">📜 LE SAVIEZ-VOUS ?</p>
                 <p id="history-text" style="color: #ecfdf5; margin-bottom: 15px;"></p>
                 <button class="btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Étape suivante ➔</button>
@@ -186,7 +186,7 @@ const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
         theme: { fr: "🎄 Magie de Noël, Saint Nicolas & Père Fouettard (Colmar)", en: "🎄 Christmas Magic, St. Nicholas & Knecht Ruprecht (Colmar)" },
-        image: "https://images.unsplash.com/photo-1543872084-c7bd3822856f?q=80&w=800",
+        image: "colmar.jpg",
         desc: { 
             fr: "Parcourez le centre historique de Colmar guidé par une carte interactive. À chaque monument, validez votre position, observez les détails sculptés et découvrez l'histoire fascinante de la ville.",
             en: "Explore Colmar's historic center with an interactive map. At each monument, check your position, observe sculpted details, and discover the town's history."
@@ -206,7 +206,8 @@ const GAMES = {
                     en: "Observe the sculptures around the door. One figure holds a sharp mason tool instead of a book. What tool is it?" 
                 },
                 
-                photo: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=800",
+                // Photo du portail sculpté et du tympan
+                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg/800px-Fichier%3APortail_de_la_coll%C3%A9giale_Saint-Martin_%28Colmar%29.jpg",
                 
                 history: {
                     fr: "Cette hachette (ou erminette) rappelle le rôle fondamental des tailleurs de pierre. En construisant la Collégiale entre 1234 et 1365, ces artisans gravaient leur marque personnelle dans le grès rose pour percevoir leur salaire. Cette figure rend hommage aux bâtisseurs anonymes du gothique alsacien !",
@@ -231,7 +232,8 @@ const GAMES = {
                     en: "At the top, the bronze statue holds a vessel related to Alsace's most famous drink. What is this product?" 
                 },
                 
-                photo: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=800",
+                // Photo gros plan de la statue du Tonnelier de Bartholdi au sommet de la Maison des Têtes
+                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg/800px-Maison_des_T%C3%AAtes_%28Colmar%29_%281%29.jpg",
                 
                 history: {
                     fr: "Construite en 1609 pour le marchand Anton Burger, la Maison des Têtes comporte 106 masques en pierre grotesque. Au sommet du pignon se dresse la statue du Tonnelier créée en 1902 par Auguste Bartholdi, le célèbre sculpteur colmarien créateur de la Statue de la Liberté à New York !",
@@ -256,7 +258,8 @@ const GAMES = {
                     en: "Look at the crest carved above the vaulted passage. Which mythical creature (half eagle, half lion) protects Colmar's seal?" 
                 },
                 
-                photo: "https://images.unsplash.com/photo-1548625361-188b8e0e0e0a?q=80&w=800",
+                // Photo du Koïfhus montrant l'arche voûtée et ses décors sculptés
+                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Ko%C3%AFfhus_Colmar.jpg/800px-Ko%C3%AFfhus_Colmar.jpg",
                 
                 history: {
                     fr: "Achevé en 1480, le Koïfhus est le plus ancien bâtiment public profane de Colmar. Toutes les marchandises importées y étaient taxées. Le Griffon sculpté au-dessus de la voûte symbolise la vigilance : la force du lion pour défendre les coffres et la vision de l'aigle pour débusquer la fraude !",
@@ -281,7 +284,8 @@ const GAMES = {
                     en: "Which traditional sauerkraut vegetable was transported by these flat boats?" 
                 },
                 
-                photo: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800",
+                // Photo des barques et canaux de la Petite Venise au Quai de la Poissonnerie
+                photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Petite_Venise_Colmar.jpg/800px-Petite_Venise_Colmar.jpg",
                 
                 history: {
                     fr: "Le Quai de la Poissonnerie était le centre névralgique des pêcheurs et maraîchers. Ces derniers transportaient des tonnes de choux à bord de barques à fond plat naviguant sur la Lauch. La fermentation du chou en choucroute permettait de conserver des vitamines précieuses durant tout l'hiver !",
