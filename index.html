@@ -80,8 +80,9 @@
         </select>
     </header>
 
-    <!-- VUE 1 : Sélection des jeux -->
+    <!-- VUE 1 : Sélection des jeux (Image d'accueil Colmar affichée directement) -->
     <div id="view-selection" class="card">
+        <img src="colmar.jpg" class="game-banner" alt="Illustration de Colmar">
         <h1 data-i18n="selectGameTitle">Choisissez votre parcours</h1>
         <p data-i18n="selectGameDesc">Scannez un QR code ou sélectionnez une visite ci-dessous :</p>
         <button class="btn" onclick="loadGame('alsace')">La vieille fable alsacienne</button>
@@ -218,7 +219,7 @@ const GAMES = {
     alsace: {
         title: { fr: "La vieille fable alsacienne", en: "The Old Alsatian Fable" },
         theme: { fr: "🎄 Sur les traces de Saint Nicolas & du Père Fouettard", en: "🎄 Following St. Nicholas & Knecht Ruprecht" },
-        image: "colmar.jpg", // Restauration de l'illustration initiale
+        image: "colmar.jpg",
         desc: { 
             fr: "Salut l'équipe ! Moi c'est Barnabé, la cigogne officielle de Colmar ! Suivez-moi à travers le centre historique, je vais vous faire découvrir mes endroits secrets préférés et les plus beaux trésors de la ville !",
             en: "Hi team! I'm Barnabé, Colmar's official stork! Follow me through the historic center, I'll show you my favorite secret spots and monuments!"
