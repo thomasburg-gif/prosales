@@ -1,0 +1,12 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# Contenu complet des visites (énigmes, réponses) : jamais publié sur GitHub,
+# mais embarqué dans les Edge Functions au déploiement.
+functions/_private/

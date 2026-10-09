@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visites Interactives</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --admin: #a855f7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+
+        .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Header & Langue */
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #334155; }
+        .lang-select { background: var(--card-bg); color: var(--text-main); border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* Cartes & Vues */
+        .card { background: var(--card-bg); padding: 24px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .hidden { display: none !important; }
+
+        /* Images */
+        .game-banner { width: 100%; height: auto; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #334155; }
+        .step-photo { width: 100%; height: 220px; border-radius: 10px; object-fit: cover; margin-bottom: 12px; border: 1px solid #334155; }
+
+        /* Style Guide & Bulle de dialogue BD avec tête de guide */
+        .stork-container { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; }
+        .stork-avatar { width: 60px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); background: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        .speech-bubble { background: #0f172a; border: 1px solid var(--accent); padding: 12px 16px; border-radius: 12px; border-top-left-radius: 2px; position: relative; color: var(--text-main); font-size: 0.9rem; line-height: 1.4; flex-grow: 1; }
+        .stork-name { font-weight: bold; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: block; }
+
+        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+        p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
+
+        #game-theme { color: var(--text-main); font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+
+        /* Boutons */
+        .btn { width: 100%; background: var(--accent); color: var(--bg-color); border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-top: 10px; }
+        .btn-hint { background: transparent; border: 1px dashed var(--warning); color: var(--warning); margin-top: 10px; padding: 10px; font-size: 0.85rem; width: 100%; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-skip { background: var(--admin); color: white; margin-top: 10px; }
+        .btn-map { background: #0284c7; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: 600; text-decoration: none; display: inline-block; text-align: center; margin-top: 8px; width: 100%; font-size: 0.85rem; }
+
+        /* Chrono & Progression */
+        .hud { display: flex; justify-content: space-between; align-items: center; background: #0284c7; padding: 12px 16px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; }
+
+        /* Inputs & Alertes */
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; }
+        .status-msg { margin-top: 10px; font-size: 0.85rem; text-align: center; font-weight: 600; }
+        .status-msg.error { color: var(--error); }
+        .status-msg.success { color: var(--success); }
+
+        .hint-box { background: #334155; border-left: 4px solid var(--warning); padding: 12px; border-radius: 6px; margin-top: 8px; color: #f1f5f9; font-size: 0.85rem; line-height: 1.4; }
+        .history-box { background: #064e3b; border: 1px solid var(--success); padding: 14px; border-radius: 10px; margin-top: 15px; color: #ecfdf5; font-size: 0.88rem; line-height: 1.5; }
+        .admin-badge { background: #581c87; color: #e9d5ff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px solid var(--admin); }
+
+        /* Bloc Carte GPS */
+        .location-card { background: #0f172a; border: 1px solid #38bdf8; padding: 14px; border-radius: 10px; margin-bottom: 15px; }
+        .map-iframe { width: 100%; height: 180px; border-radius: 8px; border: none; margin-top: 10px; }
+
+        /* Sélection groupée par ville */
+        .city-group-label { font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; margin: 16px 0 6px; }
+        .city-group-label:first-child { margin-top: 0; }
+        .tour-btn { margin-top: 6px; }
+
+        /* Paywall & reprise de progression */
+        .price-tag { display: inline-block; background: var(--warning); color: var(--bg-color); font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+        #resume-banner { border-color: var(--accent); margin-bottom: 0; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <span style="font-weight: 800;">VISITE_APP</span>
+        <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+            <option value="fr">FR 🇫🇷</option>
+            <option value="en">EN 🇬🇧</option>
+            <option value="de">DE 🇩🇪</option>
+        </select>
+    </header>
+
+    <!-- VUE 1 : Sélection des visites, groupées par ville -->
+    <div id="view-selection" class="card">
+        <div id="resume-banner" class="card hidden" style="margin-bottom: 15px;">
+            <p id="resume-text" style="margin-bottom: 12px;">--</p>
+            <button class="btn" id="resume-btn" onclick="resumeProgress()">▶️ Reprendre</button>
+            <button class="btn btn-outline" id="restart-btn" onclick="dismissResume()">Recommencer à zéro</button>
+        </div>
+
+        <h1 data-i18n="selectGameTitle">Choisissez votre parcours</h1>
+        <p data-i18n="selectGameDesc">Scannez un QR code ou sélectionnez une visite ci-dessous :</p>
+        <div id="city-groups"></div>
+    </div>
+
+    <!-- VUE 2 : Présentation de la visite avec le guide -->
+    <div id="view-intro" class="card hidden">
+        <img id="game-banner" class="game-banner hidden" src="" alt="Illustration de la visite">
+        <h1 id="game-title">--</h1>
+        <p id="game-theme"></p>
+
+        <!-- Bulle de bienvenue du guide -->
+        <div class="stork-container">
+            <div class="stork-avatar" id="intro-avatar">🦩</div>
+            <div class="speech-bubble">
+                <span class="stork-name" id="intro-guide-name">--</span>
+                <span id="game-desc">--</span>
+            </div>
+        </div>
+
+        <button class="btn" id="start-btn" onclick="onStartClick()">Commencer</button>
+        <div id="intro-status" class="status-msg"></div>
+    </div>
+
+    <!-- VUE PAYWALL : accès payant à la visite sélectionnée -->
+    <div id="view-paywall" class="card hidden">
+        <h1 id="paywall-title">--</h1>
+        <p id="paywall-desc">--</p>
+        <button class="btn" id="paywall-pay-btn" onclick="startCheckout()">💳 Payer 5€ et démarrer</button>
+        <button class="btn btn-outline" id="paywall-back-btn" onclick="backToSelection()">🏠 Retour</button>
+        <div id="paywall-status" class="status-msg"></div>
+    </div>
+
+    <!-- VUE 3 : Interface de la visite -->
+    <div id="view-game" class="card hidden">
+        <div id="admin-indicator" class="admin-badge hidden">⚡ MODE TEST/ADMIN ACTIF</div>
+
+        <div class="hud">
+            <span>⏱️ Temps : <span id="timer">01:30:00</span></span>
+            <span id="step-indicator">Étape 1/4</span>
+        </div>
+
+        <h1 id="step-title">--</h1>
+
+        <!-- Bulle d'orientation du guide -->
+        <div class="stork-container">
+            <div class="stork-avatar" id="location-avatar">🦩</div>
+            <div class="speech-bubble">
+                <span class="stork-name" id="location-guide-name">--</span>
+                <span id="step-location-text">--</span>
+            </div>
+        </div>
+
+        <!-- Bloc Plan & Guidage GPS -->
+        <div class="location-card">
+            <iframe id="map-frame" class="map-iframe" src=""></iframe>
+            <a id="gmaps-link" class="btn-map" href="" target="_blank">🗺️ Ouvrir dans Google Maps</a>
+        </div>
+
+        <!-- Validation de la position -->
+        <div id="gps-block" style="margin-bottom: 15px;">
+            <button class="btn btn-outline" onclick="checkGPS()" data-i18n="gpsBtn">📍 Valider mon arrivée sur place</button>
+            <div id="gps-status" class="status-msg"></div>
+        </div>
+
+        <!-- Bloc Énigme d'Observation sur place -->
+        <div id="riddle-block" class="hidden">
+            <div class="stork-container">
+                <div class="stork-avatar">🧐</div>
+                <div class="speech-bubble">
+                    <span class="stork-name" id="riddle-guide-name">--</span>
+                    <span id="step-riddle">--</span>
+                </div>
+            </div>
+
+            <input type="text" id="riddle-answer" placeholder="Entrez votre réponse..." data-i18n-placeholder="answerPlaceholder">
+            <button class="btn" id="submit-btn" onclick="submitAnswer()" data-i18n="submitBtn">Valider</button>
+
+            <!-- Bloc Histoire & Photo Post-Validation -->
+            <div id="history-block" class="history-box hidden">
+                <img id="step-photo" class="step-photo" src="" alt="Détail du monument">
+
+                <div class="stork-container" style="margin-bottom: 10px;">
+                    <div class="stork-avatar">🎓</div>
+                    <div class="speech-bubble" style="background: #022c22; border-color: #10b981;">
+                        <span class="stork-name" id="secret-guide-name" style="color: #34d399;">--</span>
+                        <span id="history-text" style="color: #ecfdf5;">--</span>
+                    </div>
+                </div>
+
+                <button class="btn" id="next-step-btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Étape suivante ➔</button>
+            </div>
+
+            <!-- Indices à 2 niveaux -->
+            <div id="hints-container">
+                <button class="btn-hint" id="hint-btn-1" onclick="showHint(1)">💡 Un p'tit coup de pouce ? (Indice 1)</button>
+                <div id="hint-text-1" class="hint-box hidden"></div>
+
+                <button class="btn-hint hidden" id="hint-btn-2" onclick="showHint(2)">🔑 Le guide te donne la réponse (Indice 2)</button>
+                <div id="hint-text-2" class="hint-box hidden"></div>
+            </div>
+
+            <button id="skip-btn" class="btn btn-skip hidden" onclick="skipStep()">⏩ Passer cette étape (Admin)</button>
+
+            <div id="answer-status" class="status-msg"></div>
+        </div>
+
+    </div>
+
+    <!-- VUE 4 : Carte-souvenir de fin de visite -->
+    <div id="view-souvenir" class="card hidden">
+        <h1 id="souvenir-title">--</h1>
+        <p id="souvenir-congrats">--</p>
+        <canvas id="souvenir-canvas" width="900" height="1300" class="game-banner"></canvas>
+        <button class="btn" id="souvenir-share-btn" onclick="shareSouvenir()">📤 Partager</button>
+        <button class="btn btn-outline" id="souvenir-download-btn" onclick="downloadSouvenir()">📥 Télécharger l'image</button>
+        <button class="btn btn-outline" id="souvenir-back-btn" onclick="backToSelection()">🏠 Retour à l'accueil</button>
+    </div>
+
+        <div style="margin-top: 5px; text-align: center;">
+            <button style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline;" onclick="toggleAdminMode()">⚙️ Mode Admin / Test</button>
+        </div>
+</div>
+
+<script>
+// Le code admin est vérifié par la fonction get-tour (secret ADMIN_CODE), jamais stocké dans la page.
+let isAdminMode = false;
+let adminCode = null;
+
+const SUPABASE_FUNCTIONS_URL = "https://siynxfayjrjpuidyksxu.supabase.co/functions/v1";
+// Accès payés sur cet appareil : { [tourId]: { sessionId, expiresAt } }, valables 24 h
+const ACCESS_KEY = "visite_access";
+const PROGRESS_KEY = "visite_progress";
+const TOUR_DURATION_SEC = 90 * 60;
+
+// Rempli par data/manifest.js
+const CITIES = [];
+// Rempli par data/catalog.js : aperçu public de chaque visite (sans étapes, énigmes ni réponses)
+const TOURS = {};
+// Visites complètes déjà récupérées auprès de get-tour
+const FULL_TOURS = {};
+
+const TRANSLATIONS = {
+    fr: {
+        selectGameTitle: "Choisissez votre parcours",
+        selectGameDesc: "Scannez un QR code ou sélectionnez une visite ci-dessous :",
+        startBtnTemplate: "Suivre {name} !",
+        gpsBtn: "📍 Valider mon arrivée sur place",
+        submitBtn: "Valider la réponse",
+        gpsSuccess: "✓ Bravo, vous êtes au bon endroit ! Regardez autour de vous.",
+        gpsError: "❌ Houla ! Vous n'êtes pas assez proche. Suivez la carte !",
+        wrongAnswer: "❌ Ce n'est pas tout à fait ça... Regardez bien ou demandez un indice !",
+        timeOver: "⏱️ Le temps est écoulé !",
+        answerPlaceholder: "Entrez votre réponse...",
+        gpsUnsupported: "GPS non supporté par votre navigateur.",
+        gpsEnable: "Activez la géolocalisation sur votre téléphone.",
+        finishMsg: "🎉 Bravo ! {name} vous félicite, vous avez terminé la visite !",
+        souvenirTitle: "Votre souvenir",
+        souvenirDoneIn: "Visite terminée en",
+        shareBtn: "📤 Partager",
+        downloadBtn: "📥 Télécharger l'image",
+        backHomeBtn: "🏠 Retour à l'accueil",
+        shareText: "J'ai terminé la visite « {title} » !",
+        paywallDesc: "Cette visite est payante : 5€ pour un accès de 24 h, à votre rythme.",
+        accessExpired: "⌛ Votre accès de 24 h à cette visite a expiré.",
+        loadError: "❌ Impossible de charger la visite. Vérifiez votre connexion et réessayez.",
+        payBtn: "💳 Payer 5€ et démarrer",
+        checkoutError: "❌ Impossible de démarrer le paiement. Réessayez dans quelques instants.",
+        verifyingPayment: "Vérification du paiement en cours...",
+        paymentCancelled: "Paiement annulé. Vous pouvez réessayer quand vous voulez.",
+        priceTag: "5€",
+        resumeText: "Vous avez une visite en cours : « {title} », étape {step}/{total}.",
+        resumeBtn: "▶️ Reprendre",
+        restartBtn: "Recommencer à zéro"
+    },
+    en: {
+        selectGameTitle: "Choose your tour",
+        selectGameDesc: "Scan a QR code or select a tour below:",
+        startBtnTemplate: "Follow {name}!",
+        gpsBtn: "📍 Check location arrival",
+        submitBtn: "Submit Answer",
+        gpsSuccess: "✓ Great job, you arrived! Look around you.",
+        gpsError: "❌ Oops! You are not close enough. Follow the map!",
+        wrongAnswer: "❌ Not quite... Look carefully or ask for a hint!",
+        timeOver: "⏱️ Time is up!",
+        answerPlaceholder: "Enter your answer...",
+        gpsUnsupported: "GPS not supported by your browser.",
+        gpsEnable: "Enable geolocation on your phone.",
+        finishMsg: "🎉 Well done! {name} congratulates you, you finished the tour!",
+        souvenirTitle: "Your souvenir",
+        souvenirDoneIn: "Tour completed in",
+        shareBtn: "📤 Share",
+        downloadBtn: "📥 Download image",
+        backHomeBtn: "🏠 Back to home",
+        shareText: "I completed the \"{title}\" tour!",
+        paywallDesc: "This tour requires a one-time payment of €5 for 24-hour access, at your own pace.",
+        accessExpired: "⌛ Your 24-hour access to this tour has expired.",
+        loadError: "❌ Could not load the tour. Check your connection and try again.",
+        payBtn: "💳 Pay €5 and start",
+        checkoutError: "❌ Couldn't start the payment. Please try again in a moment.",
+        verifyingPayment: "Verifying your payment...",
+        paymentCancelled: "Payment cancelled. You can try again anytime.",
+        priceTag: "€5",
+        resumeText: "You have a tour in progress: \"{title}\", step {step}/{total}.",
+        resumeBtn: "▶️ Resume",
+        restartBtn: "Start over"
+    },
+    de: {
+        selectGameTitle: "Wählt eure Tour",
+        selectGameDesc: "Scannt einen QR-Code oder wählt unten eine Tour aus:",
+        startBtnTemplate: "{name} folgen!",
+        gpsBtn: "📍 Ankunft bestätigen",
+        submitBtn: "Antwort bestätigen",
+        gpsSuccess: "✓ Super, ihr seid da! Schaut euch um.",
+        gpsError: "❌ Ihr seid noch nicht nah genug dran. Folgt der Karte!",
+        wrongAnswer: "❌ Nicht ganz richtig... Schaut genau hin oder holt euch einen Tipp!",
+        timeOver: "⏱️ Die Zeit ist abgelaufen!",
+        answerPlaceholder: "Antwort eingeben...",
+        gpsUnsupported: "GPS wird von eurem Browser nicht unterstützt.",
+        gpsEnable: "Aktiviert die Standortfreigabe auf eurem Handy.",
+        finishMsg: "🎉 Geschafft! {name} gratuliert euch zum Abschluss der Tour!",
+        souvenirTitle: "Euer Andenken",
+        souvenirDoneIn: "Tour abgeschlossen in",
+        shareBtn: "📤 Teilen",
+        downloadBtn: "📥 Bild herunterladen",
+        backHomeBtn: "🏠 Zurück zur Startseite",
+        shareText: "Ich habe die Tour „{title}“ abgeschlossen!",
+        paywallDesc: "Diese Tour kostet einmalig 5€ für 24 Stunden Zugang, in eurem eigenen Tempo.",
+        accessExpired: "⌛ Euer 24-Stunden-Zugang zu dieser Tour ist abgelaufen.",
+        loadError: "❌ Die Tour konnte nicht geladen werden. Prüft eure Verbindung und versucht es erneut.",
+        payBtn: "💳 5€ zahlen und starten",
+        checkoutError: "❌ Zahlung konnte nicht gestartet werden. Bitte versucht es gleich noch einmal.",
+        verifyingPayment: "Zahlung wird überprüft...",
+        paymentCancelled: "Zahlung abgebrochen. Ihr könnt es jederzeit erneut versuchen.",
+        priceTag: "5€",
+        resumeText: "Ihr habt eine Tour in Arbeit: „{title}“, Station {step}/{total}.",
+        resumeBtn: "▶️ Fortsetzen",
+        restartBtn: "Neu starten"
+    }
+};
+
+let currentLang = 'fr';
+let currentGame = null;
+let currentTourId = null;
+let currentStepIndex = 0;
+let timerInterval = null;
+let tourStartTime = null;
+let pendingResume = null;
+
+async function toggleAdminMode() {
+    if (!isAdminMode) {
+        const pwd = prompt("Saisissez le code d'accès administrateur :");
+        if (!pwd) return;
+        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/get-tour?check_admin=1`, {
+            headers: { 'x-admin-code': pwd }
+        }).catch(() => null);
+        if (res && res.ok) {
+            isAdminMode = true;
+            adminCode = pwd;
+            document.getElementById('admin-indicator').classList.remove('hidden');
+            document.getElementById('skip-btn').classList.remove('hidden');
+            alert("✅ Mode Admin activé !");
+            // Depuis le paywall : on passe directement à l'intro, sans payer.
+            if (currentTourId && !document.getElementById('view-paywall').classList.contains('hidden')) {
+                loadGame(currentTourId);
+            }
+        } else {
+            alert("❌ Code incorrect.");
+        }
+    } else {
+        isAdminMode = false;
+        adminCode = null;
+        document.getElementById('admin-indicator').classList.add('hidden');
+        document.getElementById('skip-btn').classList.add('hidden');
+        alert("Mode Admin désactivé.");
+    }
+}
+
+function changeLanguage() {
+    currentLang = document.getElementById('langSelect').value;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[currentLang][key]) el.innerText = TRANSLATIONS[currentLang][key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (TRANSLATIONS[currentLang][key]) el.placeholder = TRANSLATIONS[currentLang][key];
+    });
+    renderSelection();
+    if (currentGame) updateUI();
+}
+
+// --- Accès payant (localStorage, par appareil) ---
+
+function getAccessMap() {
+    try {
+        return JSON.parse(localStorage.getItem(ACCESS_KEY) || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+function getAccess(tourId) {
+    const access = getAccessMap()[tourId];
+    return access && access.expiresAt > Date.now() ? access : null;
+}
+
+function saveAccess(tourId, access) {
+    const map = getAccessMap();
+    if (access) map[tourId] = access;
+    else delete map[tourId];
+    try {
+        localStorage.setItem(ACCESS_KEY, JSON.stringify(map));
+    } catch (e) {}
+}
+
+function isTourUnlocked(tourId) {
+    const tour = TOURS[tourId];
+    if (!tour || !tour.price || isAdminMode) return true;
+    return !!getAccess(tourId);
+}
+
+// Récupère la visite complète auprès de get-tour (accès payé, visite gratuite ou code admin).
+// Renvoie { tour } en cas de succès, sinon { error: 'expired' | 'unpaid' | 'network' }.
+async function fetchFullTour(tourId, sessionId) {
+    if (FULL_TOURS[tourId]) return { tour: FULL_TOURS[tourId] };
+
+    const access = getAccess(tourId);
+    const params = new URLSearchParams({ id: tourId });
+    sessionId = sessionId || (access && access.sessionId);
+    if (sessionId) params.set('session_id', sessionId);
+
+    let res;
+    try {
+        res = await fetch(`${SUPABASE_FUNCTIONS_URL}/get-tour?${params}`, {
+            headers: adminCode ? { 'x-admin-code': adminCode } : {}
+        });
+    } catch (e) {
+        return { error: 'network' };
+    }
+    if (res.status === 402 || res.status === 403) {
+        saveAccess(tourId, null);
+        return { error: res.status === 403 ? 'expired' : 'unpaid' };
+    }
+    if (!res.ok) return { error: 'network' };
+
+    const { tour, expiresAt } = await res.json();
+    if (sessionId && expiresAt) saveAccess(tourId, { sessionId, expiresAt });
+    FULL_TOURS[tourId] = tour;
+    return { tour };
+}
+
+// --- Reprise de progression (localStorage, par appareil) ---
+
+function saveProgress() {
+    if (!currentTourId) return;
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+        tourId: currentTourId,
+        stepIndex: currentStepIndex,
+        tourStartTime,
+        lang: currentLang
+    }));
+}
+
+function loadSavedProgress() {
+    try {
+        return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearProgress() {
+    localStorage.removeItem(PROGRESS_KEY);
+}
+
+function renderSelection() {
+    const container = document.getElementById('city-groups');
+    container.innerHTML = '';
+    CITIES.forEach(city => {
+        const availableTours = city.tours.filter(id => TOURS[id]);
+        if (availableTours.length === 0) return;
+
+        const label = document.createElement('div');
+        label.className = 'city-group-label';
+        label.textContent = `${city.flag} ${getText(city.name)}`;
+        container.appendChild(label);
+
+        availableTours.forEach((tourId, i) => {
+            const tour = TOURS[tourId];
+            const btn = document.createElement('button');
+            btn.className = 'btn tour-btn' + (i > 0 ? ' btn-outline' : '');
+            btn.textContent = getText(tour.title);
+            if (tour.price && !isTourUnlocked(tourId)) {
+                const tag = document.createElement('span');
+                tag.className = 'price-tag';
+                tag.textContent = TRANSLATIONS[currentLang].priceTag;
+                btn.appendChild(tag);
+            }
+            btn.onclick = () => loadGame(tourId);
+            container.appendChild(btn);
+        });
+    });
+}
+
+function loadGame(gameId) {
+    const tour = TOURS[gameId];
+    if (!tour) return;
+    currentGame = FULL_TOURS[gameId] || tour;
+    currentTourId = gameId;
+
+    if (tour.defaultLang) {
+        currentLang = tour.defaultLang;
+        document.getElementById('langSelect').value = currentLang;
+    }
+
+    document.getElementById('resume-banner').classList.add('hidden');
+
+    if (!isTourUnlocked(gameId)) {
+        showPaywall(gameId);
+        return;
+    }
+
+    document.getElementById('view-selection').classList.add('hidden');
+    document.getElementById('view-paywall').classList.add('hidden');
+    document.getElementById('view-intro').classList.remove('hidden');
+    setIntroStatus('', '');
+    updateUI();
+}
+
+function setIntroStatus(text, type) {
+    const status = document.getElementById('intro-status');
+    status.className = 'status-msg' + (type ? ' ' + type : '');
+    status.innerText = text;
+}
+
+// Bouton « Suivre … ! » : charge la visite complète puis démarre.
+async function onStartClick() {
+    const btn = document.getElementById('start-btn');
+    btn.disabled = true;
+    const { tour, error } = await fetchFullTour(currentTourId);
+    btn.disabled = false;
+
+    if (error === 'network') {
+        setIntroStatus(TRANSLATIONS[currentLang].loadError, 'error');
+        return;
+    }
+    if (error) {
+        showPaywall(currentTourId, error === 'expired' ? TRANSLATIONS[currentLang].accessExpired : '');
+        return;
+    }
+    currentGame = tour;
+    startGame();
+}
+
+function showPaywall(gameId, message) {
+    const tour = TOURS[gameId];
+    document.getElementById('view-selection').classList.add('hidden');
+    document.getElementById('view-intro').classList.add('hidden');
+    document.getElementById('view-paywall').classList.remove('hidden');
+
+    document.getElementById('paywall-title').innerText = getText(tour.title);
+    document.getElementById('paywall-desc').innerText = TRANSLATIONS[currentLang].paywallDesc;
+    document.getElementById('paywall-pay-btn').innerText = TRANSLATIONS[currentLang].payBtn;
+    document.getElementById('paywall-status').className = 'status-msg' + (message ? ' error' : '');
+    document.getElementById('paywall-status').innerText = message || '';
+}
+
+async function startCheckout() {
+    const btn = document.getElementById('paywall-pay-btn');
+    const status = document.getElementById('paywall-status');
+    btn.disabled = true;
+    status.className = 'status-msg';
+    status.innerText = '';
+
+    try {
+        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tourId: currentTourId,
+                returnUrl: window.location.origin + window.location.pathname
+            })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'no url');
+        window.location.href = data.url;
+    } catch (e) {
+        status.className = 'status-msg error';
+        status.innerText = TRANSLATIONS[currentLang].checkoutError;
+        btn.disabled = false;
+    }
+}
+
+function getText(obj) {
+    if (!obj) return "";
+    if (typeof obj === 'string') return obj;
+    return obj[currentLang] || obj.fr || obj.de || obj.en || Object.values(obj)[0] || "";
+}
+
+function updateUI() {
+    if (!currentGame) return;
+    document.getElementById('game-title').innerText = getText(currentGame.title);
+    document.getElementById('game-theme').innerText = getText(currentGame.theme);
+    document.getElementById('game-desc').innerText = getText(currentGame.desc);
+
+    const guide = currentGame.guide;
+    document.getElementById('intro-avatar').textContent = guide.avatar;
+    document.getElementById('intro-guide-name').textContent = getText(guide.name);
+    document.getElementById('start-btn').innerText =
+        TRANSLATIONS[currentLang].startBtnTemplate.replace('{name}', getText(guide.name));
+
+    const banner = document.getElementById('game-banner');
+    if (currentGame.image) {
+        banner.src = currentGame.image;
+        banner.classList.remove('hidden');
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
+function startGame() {
+    document.getElementById('view-intro').classList.add('hidden');
+    document.getElementById('view-game').classList.remove('hidden');
+
+    tourStartTime = Date.now();
+    if (!timerInterval) {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+    loadStep(0);
+}
+
+function updateTimer() {
+    const elapsedSec = Math.floor((Date.now() - tourStartTime) / 1000);
+    const remaining = Math.max(0, TOUR_DURATION_SEC - elapsedSec);
+
+    let hours = Math.floor(remaining / 3600);
+    let minutes = Math.floor((remaining % 3600) / 60);
+    let seconds = remaining % 60;
+
+    document.getElementById('timer').innerText =
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    if (remaining <= 0 && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        alert(TRANSLATIONS[currentLang].timeOver);
+    }
+}
+
+function loadStep(index) {
+    currentStepIndex = index;
+    const step = currentGame.steps[index];
+    if (!step) return;
+
+    const guide = currentGame.guide;
+    document.getElementById('location-avatar').textContent = guide.avatar;
+    document.getElementById('location-guide-name').textContent = getText(guide.name);
+    document.getElementById('riddle-guide-name').textContent = getText(guide.name);
+    document.getElementById('secret-guide-name').textContent = getText(guide.secretLabel);
+
+    document.getElementById('step-indicator').innerText = `${index + 1}/${currentGame.steps.length}`;
+    document.getElementById('step-title').innerText = getText(step.title);
+
+    document.getElementById('step-location-text').innerText = getText(step.location_text);
+
+    const lat = step.coords.lat;
+    const lng = step.coords.lng;
+    document.getElementById('map-frame').src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.003}%2C${lat-0.002}%2C${lng+0.003}%2C${lat+0.002}&layer=mapnik&marker=${lat}%2C${lng}`;
+    document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+    document.getElementById('step-riddle').innerText = getText(step.riddle);
+
+    // Reset UI
+    document.getElementById('history-block').classList.add('hidden');
+    document.getElementById('submit-btn').classList.remove('hidden');
+    document.getElementById('riddle-answer').classList.remove('hidden');
+    document.getElementById('riddle-answer').value = "";
+    document.getElementById('hints-container').classList.remove('hidden');
+
+    document.getElementById('hint-btn-1').classList.remove('hidden');
+    document.getElementById('hint-text-1').classList.add('hidden');
+    document.getElementById('hint-text-1').innerText = "";
+
+    document.getElementById('hint-btn-2').classList.add('hidden');
+    document.getElementById('hint-text-2').classList.add('hidden');
+    document.getElementById('hint-text-2').innerText = "";
+
+    saveProgress();
+}
+
+function showHint(level) {
+    const step = currentGame.steps[currentStepIndex];
+    if (!step) return;
+
+    if (level === 1) {
+        const hintBox1 = document.getElementById('hint-text-1');
+        hintBox1.innerText = getText(step.hint1);
+        hintBox1.classList.remove('hidden');
+        document.getElementById('hint-btn-2').classList.remove('hidden');
+    } else if (level === 2) {
+        const hintBox2 = document.getElementById('hint-text-2');
+        hintBox2.innerText = getText(step.hint2);
+        hintBox2.classList.remove('hidden');
+    }
+}
+
+function checkGPS() {
+    const status = document.getElementById('gps-status');
+
+    if (isAdminMode) {
+        status.className = "status-msg success";
+        status.innerText = "⚡ Mode Test : Position simulée avec succès !";
+        document.getElementById('gps-block').classList.add('hidden');
+        document.getElementById('riddle-block').classList.remove('hidden');
+        return;
+    }
+
+    if (!navigator.geolocation) {
+        status.innerText = TRANSLATIONS[currentLang].gpsUnsupported;
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        const target = currentGame.steps[currentStepIndex].coords;
+
+        const distance = getDistanceInMeters(userLat, userLng, target.lat, target.lng);
+
+        if (distance <= 50) {
+            status.className = "status-msg success";
+            status.innerText = TRANSLATIONS[currentLang].gpsSuccess;
+            document.getElementById('gps-block').classList.add('hidden');
+            document.getElementById('riddle-block').classList.remove('hidden');
+        } else {
+            status.className = "status-msg error";
+            status.innerText = `${TRANSLATIONS[currentLang].gpsError} (${Math.round(distance)}m)`;
+        }
+    }, () => {
+        status.className = "status-msg error";
+        status.innerText = TRANSLATIONS[currentLang].gpsEnable;
+    });
+}
+
+function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const dLat = (lat2-lat1) * Math.PI / 180;
+    const dLon = (lon2-lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function normalizeText(text) {
+    return text
+        .toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+}
+
+function nextStepOrFinish() {
+    if (currentStepIndex + 1 < currentGame.steps.length) {
+        document.getElementById('riddle-block').classList.add('hidden');
+        document.getElementById('gps-block').classList.remove('hidden');
+        document.getElementById('gps-status').innerText = "";
+        document.getElementById('answer-status').innerText = "";
+        loadStep(currentStepIndex + 1);
+    } else {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        clearProgress();
+        showSouvenir();
+    }
+}
+
+function skipStep() {
+    alert("⏩ Étape passée via le mode Admin.");
+    nextStepOrFinish();
+}
+
+function submitAnswer() {
+    const inputRaw = document.getElementById('riddle-answer').value;
+    const status = document.getElementById('answer-status');
+    const step = currentGame.steps[currentStepIndex];
+
+    const cleanedInput = normalizeText(inputRaw);
+
+    if (!cleanedInput) return;
+
+    const validAnswers = Array.isArray(step.answer) ? step.answer : [step.answer];
+    const isCorrect = validAnswers.some(ans => normalizeText(ans) === cleanedInput);
+
+    if (isCorrect) {
+        status.className = "status-msg success";
+        status.innerText = "✓ Bonne réponse !";
+
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('riddle-answer').classList.add('hidden');
+        document.getElementById('hints-container').classList.add('hidden');
+
+        const historyBox = document.getElementById('history-block');
+        document.getElementById('step-photo').src = step.photo;
+        document.getElementById('history-text').innerText = getText(step.history);
+        historyBox.classList.remove('hidden');
+
+    } else {
+        status.className = "status-msg error";
+        status.innerText = TRANSLATIONS[currentLang].wrongAnswer;
+    }
+}
+
+function formatDuration(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return h > 0
+        ? `${h}h ${String(m).padStart(2, '0')}min`
+        : `${m}min ${String(s).padStart(2, '0')}s`;
+}
+
+function loadImageForCanvas(src) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
+
+function drawImageCover(ctx, img, x, y, w, h) {
+    const imgRatio = img.width / img.height;
+    const boxRatio = w / h;
+    let sx, sy, sw, sh;
+    if (imgRatio > boxRatio) {
+        sh = img.height;
+        sw = sh * boxRatio;
+        sx = (img.width - sw) / 2;
+        sy = 0;
+    } else {
+        sw = img.width;
+        sh = sw / boxRatio;
+        sx = 0;
+        sy = (img.height - sh) / 2;
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    const lines = [];
+    words.forEach(word => {
+        const testLine = line + word + ' ';
+        if (ctx.measureText(testLine).width > maxWidth && line !== '') {
+            lines.push(line.trim());
+            line = word + ' ';
+        } else {
+            line = testLine;
+        }
+    });
+    lines.push(line.trim());
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+    return y + lines.length * lineHeight;
+}
+
+async function showSouvenir() {
+    document.getElementById('view-game').classList.add('hidden');
+    document.getElementById('view-souvenir').classList.remove('hidden');
+
+    const t = TRANSLATIONS[currentLang];
+    const guideName = getText(currentGame.guide.name);
+    document.getElementById('souvenir-title').innerText = t.souvenirTitle;
+    document.getElementById('souvenir-congrats').innerText = t.finishMsg.replace('{name}', guideName);
+    document.getElementById('souvenir-share-btn').innerText = t.shareBtn;
+    document.getElementById('souvenir-download-btn').innerText = t.downloadBtn;
+    document.getElementById('souvenir-back-btn').innerText = t.backHomeBtn;
+
+    const elapsedStr = tourStartTime ? formatDuration(Date.now() - tourStartTime) : '';
+
+    const canvas = document.getElementById('souvenir-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#1e293b');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, W - 6, H - 6);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 42px sans-serif';
+    let cursorY = wrapCanvasText(ctx, getText(currentGame.title), W / 2, 90, W - 100, 50);
+
+    cursorY += 20;
+    ctx.font = '64px sans-serif';
+    ctx.fillText(currentGame.guide.avatar, W / 2, cursorY + 55);
+    cursorY += 75;
+    ctx.font = '28px sans-serif';
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText(guideName, W / 2, cursorY + 20);
+    cursorY += 55;
+
+    const photos = currentGame.steps.map(s => s.photo).filter(Boolean);
+    const images = await Promise.all(photos.map(loadImageForCanvas));
+    const gridTop = cursorY;
+    const cell = (W - 120) / 2;
+    const gap = 20;
+    images.forEach((img, i) => {
+        if (!img) return;
+        const col = i % 2, row = Math.floor(i / 2);
+        const x = 60 + col * (cell + gap);
+        const y = gridTop + row * (cell + gap);
+        drawImageCover(ctx, img, x, y, cell, cell);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, cell, cell);
+    });
+    const gridRows = Math.ceil(images.length / 2);
+    cursorY = gridTop + gridRows * cell + (gridRows - 1) * gap + 60;
+
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillStyle = '#22c55e';
+    ctx.fillText(`✓ ${t.souvenirDoneIn} ${elapsedStr}`, W / 2, cursorY);
+
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('VISITE_APP', W / 2, cursorY + 40);
+}
+
+function canvasToBlob() {
+    return new Promise(resolve => document.getElementById('souvenir-canvas').toBlob(resolve, 'image/png'));
+}
+
+async function downloadSouvenir() {
+    const blob = await canvasToBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'souvenir-visite.png';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function shareSouvenir() {
+    const blob = await canvasToBlob();
+    const file = new File([blob], 'souvenir-visite.png', { type: 'image/png' });
+    const t = TRANSLATIONS[currentLang];
+    const shareText = t.shareText.replace('{title}', getText(currentGame.title));
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({ files: [file], title: getText(currentGame.title), text: shareText });
+        } catch (e) {
+            // Partage annulé par l'utilisateur, rien à faire.
+        }
+    } else {
+        downloadSouvenir();
+    }
+}
+
+function backToSelection() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    tourStartTime = null;
+    currentGame = null;
+    currentTourId = null;
+    currentStepIndex = 0;
+    clearProgress();
+
+    document.getElementById('view-souvenir').classList.add('hidden');
+    document.getElementById('view-game').classList.add('hidden');
+    document.getElementById('view-intro').classList.add('hidden');
+    document.getElementById('view-paywall').classList.add('hidden');
+    document.getElementById('view-selection').classList.remove('hidden');
+    renderSelection();
+}
+
+// --- Reprise d'une visite en cours (proposée au chargement de la page) ---
+
+function offerResume(progress) {
+    const tour = TOURS[progress.tourId];
+    if (!tour) return;
+    pendingResume = progress;
+
+    document.getElementById('resume-text').innerText =
+        TRANSLATIONS[currentLang].resumeText
+            .replace('{title}', getText(tour.title))
+            .replace('{step}', progress.stepIndex + 1)
+            .replace('{total}', tour.stepCount);
+    document.getElementById('resume-btn').innerText = TRANSLATIONS[currentLang].resumeBtn;
+    document.getElementById('restart-btn').innerText = TRANSLATIONS[currentLang].restartBtn;
+    document.getElementById('resume-banner').classList.remove('hidden');
+}
+
+async function resumeProgress() {
+    if (!pendingResume) return;
+    const { tourId, stepIndex, tourStartTime: savedStart, lang } = pendingResume;
+
+    const btn = document.getElementById('resume-btn');
+    btn.disabled = true;
+    const { tour, error } = await fetchFullTour(tourId);
+    btn.disabled = false;
+    if (error) {
+        document.getElementById('resume-banner').classList.add('hidden');
+        pendingResume = null;
+        if (error !== 'network') clearProgress();
+        currentLang = lang || currentLang;
+        if (error === 'network') alert(TRANSLATIONS[currentLang].loadError);
+        else showPaywall(tourId, error === 'expired' ? TRANSLATIONS[currentLang].accessExpired : '');
+        currentTourId = tourId;
+        currentGame = TOURS[tourId];
+        return;
+    }
+
+    currentLang = lang || currentLang;
+    document.getElementById('langSelect').value = currentLang;
+    currentGame = tour;
+    currentTourId = tourId;
+    tourStartTime = savedStart;
+    pendingResume = null;
+
+    document.getElementById('resume-banner').classList.add('hidden');
+    document.getElementById('view-selection').classList.add('hidden');
+    document.getElementById('view-game').classList.remove('hidden');
+
+    if (!timerInterval) {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+    loadStep(stepIndex);
+}
+
+function dismissResume() {
+    clearProgress();
+    pendingResume = null;
+    document.getElementById('resume-banner').classList.add('hidden');
+}
+</script>
+
+<!-- Manifeste des villes + aperçu public de chaque visite -->
+<script src="data/manifest.js"></script>
+<script src="data/catalog.js"></script>
+
+<script>
+renderSelection();
+
+window.onload = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameParam = urlParams.get('game');
+    const sessionId = urlParams.get('session_id');
+    const cancelled = urlParams.get('cancelled');
+
+    if (sessionId && gameParam) {
+        document.getElementById('view-selection').classList.add('hidden');
+        document.getElementById('view-paywall').classList.remove('hidden');
+        document.getElementById('paywall-title').innerText = getText((TOURS[gameParam] || {}).title || {});
+        document.getElementById('paywall-desc').innerText = '';
+        document.getElementById('paywall-pay-btn').classList.add('hidden');
+        document.getElementById('paywall-status').innerText = TRANSLATIONS[currentLang].verifyingPayment;
+
+        history.replaceState(null, '', window.location.pathname);
+
+        try {
+            const { tour } = await fetchFullTour(gameParam, sessionId);
+            document.getElementById('paywall-pay-btn').classList.remove('hidden');
+            if (tour) {
+                loadGame(gameParam);
+                return;
+            }
+        } catch (e) {
+            document.getElementById('paywall-pay-btn').classList.remove('hidden');
+        }
+        // Paiement non confirmé : on relance le paywall pour ce jeu.
+        showPaywall(gameParam);
+        return;
+    }
+
+    if (cancelled) {
+        history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (gameParam && TOURS[gameParam]) {
+        loadGame(gameParam);
+        return;
+    }
+
+    const progress = loadSavedProgress();
+    if (progress && TOURS[progress.tourId] && isTourUnlocked(progress.tourId)) {
+        offerResume(progress);
+    }
+};
+</script>
+</body>
+</html>
