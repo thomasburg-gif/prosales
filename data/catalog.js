@@ -53,6 +53,35 @@ TOURS["alsace"] = {
     },
     "stepCount": 4
 };
+TOURS["route-des-vins"] = {
+    "title": {
+        "fr": "La Route des Vins en voiture : une journée avec Barnabé",
+        "en": "The Wine Route by Car: A Day with Barnabé"
+    },
+    "theme": {
+        "fr": "🚗 Villages, châteaux et vignobles autour de Colmar",
+        "en": "🚗 Villages, castles and vineyards around Colmar"
+    },
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Hunawihr-3563.jpg/1280px-Hunawihr-3563.jpg",
+    "price": 500,
+    "defaultLang": "fr",
+    "guide": {
+        "avatar": "🦩",
+        "name": {
+            "fr": "Barnabé la Cigogne",
+            "en": "Barnabé the Stork"
+        },
+        "secretLabel": {
+            "fr": "Le Secret de Barnabé",
+            "en": "Barnabé's Secret"
+        }
+    },
+    "desc": {
+        "fr": "Bonjour, chers passagers ! Aujourd'hui, Barnabé monte avec vous dans la voiture : je me suis installé sur la plage arrière, et je ne vous lâche plus de la journée ! Environ 110 km et 8 étapes : villages de carte postale, vignobles, châteaux forts et histoires que seuls les Alsaciens connaissent. Entre deux villages, je vous raconte la route : appuyez sur 🔊 et je parle tout haut, comme ça le conducteur garde les yeux sur la route. Prévoyez une journée (départ vers 9 h), de bonnes chaussures, et désignez votre conducteur : en Alsace on goûte le vin… mais lui, il le sent seulement !",
+        "en": "Hello, dear passengers! Today Barnabé is riding with you: I've settled on the back shelf and I'm staying with you all day! About 110 km and 8 stops: picture-postcard villages, vineyards, fortified castles and stories only Alsatians know. Between villages I'll tell you about the road: press 🔊 and I'll speak out loud, so the driver keeps their eyes on the road. Plan a full day (leave around 9 am), wear comfy shoes, and pick your driver: in Alsace we taste the wine… but the driver only gets to smell it!"
+    },
+    "stepCount": 8
+};
 TOURS["vigne"] = {
     "title": {
         "fr": "La vigne de l'horreur",

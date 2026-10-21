@@ -40,6 +40,11 @@
         .speech-bubble { background: #0f172a; border: 1px solid var(--accent); padding: 12px 16px; border-radius: 12px; border-top-left-radius: 2px; position: relative; color: var(--text-main); font-size: 0.9rem; line-height: 1.4; flex-grow: 1; }
         .stork-name { font-weight: bold; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: block; }
 
+        /* Visites en voiture : anecdotes « en route » et lecture à voix haute */
+        .road-bubble { background: #1c1917; border-color: var(--warning); }
+        .road-bubble .stork-name { color: var(--warning); }
+        .btn-speak { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin: -5px 0 15px 72px; }
+
         h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
         p { color: var(--text-muted); line-height: 1.5; margin-bottom: 15px; font-size: 0.95rem; }
 
@@ -144,6 +149,18 @@
 
         <h1 id="step-title">--</h1>
 
+        <!-- Visites en voiture : le guide raconte la route jusqu'à l'étape -->
+        <div id="road-block" class="hidden">
+            <div class="stork-container">
+                <div class="stork-avatar">🚗</div>
+                <div class="speech-bubble road-bubble">
+                    <span class="stork-name" id="road-guide-name">--</span>
+                    <span id="step-road-text">--</span>
+                </div>
+            </div>
+            <button class="btn-speak" data-speak="step-road-text" onclick="toggleSpeak(this)">🔊 Écouter</button>
+        </div>
+
         <!-- Bulle d'orientation du guide -->
         <div class="stork-container">
             <div class="stork-avatar" id="location-avatar">🦩</div>
@@ -157,6 +174,7 @@
         <div class="location-card">
             <iframe id="map-frame" class="map-iframe" src=""></iframe>
             <a id="gmaps-link" class="btn-map" href="" target="_blank">🗺️ Ouvrir dans Google Maps</a>
+            <a id="waze-link" class="btn-map hidden" href="" target="_blank">🚙 Itinéraire Waze</a>
         </div>
 
         <!-- Validation de la position -->
@@ -189,6 +207,7 @@
                         <span id="history-text" style="color: #ecfdf5;">--</span>
                     </div>
                 </div>
+                <button class="btn-speak" data-speak="history-text" onclick="toggleSpeak(this)">🔊 Écouter</button>
 
                 <button class="btn" id="next-step-btn" style="background: #10b981; color: white;" onclick="nextStepOrFinish()">Étape suivante ➔</button>
             </div>
@@ -273,7 +292,13 @@ const TRANSLATIONS = {
         priceTag: "5€",
         resumeText: "Vous avez une visite en cours : « {title} », étape {step}/{total}.",
         resumeBtn: "▶️ Reprendre",
-        restartBtn: "Recommencer à zéro"
+        restartBtn: "Recommencer à zéro",
+        roadLabel: "En route avec {name}",
+        listenBtn: "🔊 Écouter",
+        stopListenBtn: "⏹️ Arrêter",
+        gmapsBtn: "🗺️ Ouvrir dans Google Maps",
+        gmapsDriveBtn: "🗺️ Itinéraire Google Maps",
+        wazeBtn: "🚙 Itinéraire Waze"
     },
     en: {
         selectGameTitle: "Choose your tour",
@@ -305,7 +330,13 @@ const TRANSLATIONS = {
         priceTag: "€5",
         resumeText: "You have a tour in progress: \"{title}\", step {step}/{total}.",
         resumeBtn: "▶️ Resume",
-        restartBtn: "Start over"
+        restartBtn: "Start over",
+        roadLabel: "On the road with {name}",
+        listenBtn: "🔊 Listen",
+        stopListenBtn: "⏹️ Stop",
+        gmapsBtn: "🗺️ Open in Google Maps",
+        gmapsDriveBtn: "🗺️ Google Maps directions",
+        wazeBtn: "🚙 Waze directions"
     },
     de: {
         selectGameTitle: "Wählt eure Tour",
@@ -337,7 +368,13 @@ const TRANSLATIONS = {
         priceTag: "5€",
         resumeText: "Ihr habt eine Tour in Arbeit: „{title}“, Station {step}/{total}.",
         resumeBtn: "▶️ Fortsetzen",
-        restartBtn: "Neu starten"
+        restartBtn: "Neu starten",
+        roadLabel: "Unterwegs mit {name}",
+        listenBtn: "🔊 Anhören",
+        stopListenBtn: "⏹️ Stopp",
+        gmapsBtn: "🗺️ In Google Maps öffnen",
+        gmapsDriveBtn: "🗺️ Route in Google Maps",
+        wazeBtn: "🚙 Route in Waze"
     }
 };
 
@@ -629,12 +666,14 @@ function startGame() {
     if (!timerInterval) {
         timerInterval = setInterval(updateTimer, 1000);
     }
+    updateTimer();
     loadStep(0);
 }
 
 function updateTimer() {
     const elapsedSec = Math.floor((Date.now() - tourStartTime) / 1000);
-    const remaining = Math.max(0, TOUR_DURATION_SEC - elapsedSec);
+    const durationSec = currentGame && currentGame.durationMin ? currentGame.durationMin * 60 : TOUR_DURATION_SEC;
+    const remaining = Math.max(0, durationSec - elapsedSec);
 
     let hours = Math.floor(remaining / 3600);
     let minutes = Math.floor((remaining % 3600) / 60);
@@ -666,10 +705,31 @@ function loadStep(index) {
 
     document.getElementById('step-location-text').innerText = getText(step.location_text);
 
+    stopSpeaking();
+    document.querySelectorAll('.btn-speak').forEach(b => { b.innerText = TRANSLATIONS[currentLang].listenBtn; });
+    const roadBlock = document.getElementById('road-block');
+    if (step.road) {
+        document.getElementById('road-guide-name').textContent =
+            TRANSLATIONS[currentLang].roadLabel.replace('{name}', getText(guide.name));
+        document.getElementById('step-road-text').innerText = getText(step.road);
+        roadBlock.classList.remove('hidden');
+    } else {
+        roadBlock.classList.add('hidden');
+    }
+
     const lat = step.coords.lat;
     const lng = step.coords.lng;
     document.getElementById('map-frame').src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.003}%2C${lat-0.002}%2C${lng+0.003}%2C${lat+0.002}&layer=mapnik&marker=${lat}%2C${lng}`;
-    document.getElementById('gmaps-link').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    const byCar = currentGame.mode === 'car';
+    const gmapsLink = document.getElementById('gmaps-link');
+    gmapsLink.href = byCar
+        ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
+        : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    gmapsLink.innerText = TRANSLATIONS[currentLang][byCar ? 'gmapsDriveBtn' : 'gmapsBtn'];
+    const wazeLink = document.getElementById('waze-link');
+    wazeLink.href = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+    wazeLink.innerText = TRANSLATIONS[currentLang].wazeBtn;
+    wazeLink.classList.toggle('hidden', !byCar);
 
     document.getElementById('step-riddle').innerText = getText(step.riddle);
 
@@ -707,6 +767,36 @@ function showHint(level) {
     }
 }
 
+// --- Lecture à voix haute (le conducteur écoute au lieu de lire) ---
+
+const SPEECH_LANGS = { fr: 'fr-FR', en: 'en-GB', de: 'de-DE' };
+let speakingBtn = null;
+
+function stopSpeaking() {
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (speakingBtn) speakingBtn.innerText = TRANSLATIONS[currentLang].listenBtn;
+    speakingBtn = null;
+}
+
+function toggleSpeak(btn) {
+    if (!window.speechSynthesis) return;
+    const wasSpeaking = speakingBtn === btn;
+    stopSpeaking();
+    if (wasSpeaking) return;
+
+    // Les emojis et symboles seraient lus tels quels (« voiture », « flèche droite »…).
+    const text = document.getElementById(btn.dataset.speak).innerText
+        .replace(/→/g, ', ')
+        .replace(/·/g, ',')
+        .replace(/\p{Extended_Pictographic}/gu, '');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = SPEECH_LANGS[currentLang] || 'fr-FR';
+    utterance.onend = () => { if (speakingBtn === btn) stopSpeaking(); };
+    speakingBtn = btn;
+    btn.innerText = TRANSLATIONS[currentLang].stopListenBtn;
+    speechSynthesis.speak(utterance);
+}
+
 function checkGPS() {
     const status = document.getElementById('gps-status');
 
@@ -730,7 +820,7 @@ function checkGPS() {
 
         const distance = getDistanceInMeters(userLat, userLng, target.lat, target.lng);
 
-        if (distance <= 50) {
+        if (distance <= (currentGame.gpsRadius || 50)) {
             status.className = "status-msg success";
             status.innerText = TRANSLATIONS[currentLang].gpsSuccess;
             document.getElementById('gps-block').classList.add('hidden');
@@ -967,6 +1057,7 @@ async function shareSouvenir() {
 }
 
 function backToSelection() {
+    stopSpeaking();
     clearInterval(timerInterval);
     timerInterval = null;
     tourStartTime = null;

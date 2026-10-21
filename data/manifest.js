@@ -6,7 +6,7 @@ CITIES.push(
         id: 'colmar',
         name: { fr: 'Colmar', en: 'Colmar', de: 'Colmar' },
         flag: '🇫🇷',
-        tours: ['alsace', 'vigne']
+        tours: ['alsace', 'route-des-vins', 'vigne']
     },
     {
         id: 'paris',
