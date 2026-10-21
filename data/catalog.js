@@ -37,7 +37,7 @@ TOURS["alsace"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -66,7 +66,7 @@ TOURS["route-des-vins"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -95,7 +95,7 @@ TOURS["vigne"] = {
     "price": 0,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -124,7 +124,7 @@ TOURS["paris-10e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -153,7 +153,7 @@ TOURS["paris-11e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -182,7 +182,7 @@ TOURS["paris-12e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -211,7 +211,7 @@ TOURS["paris-13e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -240,7 +240,7 @@ TOURS["paris-14e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -269,7 +269,7 @@ TOURS["paris-15e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -298,7 +298,7 @@ TOURS["paris-16e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -327,7 +327,7 @@ TOURS["paris-17e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -356,7 +356,7 @@ TOURS["paris-18e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -385,7 +385,7 @@ TOURS["paris-19e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -414,7 +414,7 @@ TOURS["paris-1er"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -443,7 +443,7 @@ TOURS["paris-20e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -472,7 +472,7 @@ TOURS["paris-2e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -501,7 +501,7 @@ TOURS["paris-3e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -530,7 +530,7 @@ TOURS["paris-4e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -559,7 +559,7 @@ TOURS["paris-5e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -588,7 +588,7 @@ TOURS["paris-6e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -617,7 +617,7 @@ TOURS["paris-7e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -646,7 +646,7 @@ TOURS["paris-8e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"
@@ -675,7 +675,7 @@ TOURS["paris-9e"] = {
     "price": 500,
     "defaultLang": "fr",
     "guide": {
-        "avatar": "🦩",
+        "avatar": "barnabe.svg",
         "name": {
             "fr": "Barnabé la Cigogne",
             "en": "Barnabé the Stork"

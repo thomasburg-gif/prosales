@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 2 104 114" width="208" height="228">
+  <!-- Barnabé la Cigogne, guide des visites -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#e0f2fe"/>
+      <stop offset="1" stop-color="#7dd3fc"/>
+    </radialGradient>
+    <linearGradient id="beakTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="120" height="130" fill="url(#sky)"/>
+
+  <!-- Cou (caché en bas par les épaules) -->
+  <path d="M45 122 C44 100 46 86 49 70 L72 70 C70 88 72 104 76 122 Z" fill="#ffffff" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Épaules et ailes -->
+  <ellipse cx="60" cy="134" rx="52" ry="28" fill="#ffffff" stroke="#1e293b" stroke-width="2.5"/>
+  <path d="M6 132 Q14 108 38 110 Q30 120 32 132 Z" fill="#111827"/>
+  <path d="M114 132 Q106 108 82 110 Q90 120 88 132 Z" fill="#111827"/>
+
+  <!-- Nœud papillon rouge à pois -->
+  <g transform="translate(60 106)">
+    <path d="M0 0 L-17 -9 Q-20 0 -17 9 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M0 0 L17 -9 Q20 0 17 9 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="-11" cy="-2" r="1.8" fill="#fff"/>
+    <circle cx="-13" cy="4" r="1.5" fill="#fff"/>
+    <circle cx="11" cy="-2" r="1.8" fill="#fff"/>
+    <circle cx="13" cy="4" r="1.5" fill="#fff"/>
+    <rect x="-4" y="-5" width="8" height="10" rx="3" fill="#b91c1c" stroke="#7f1d1d" stroke-width="2"/>
+  </g>
+
+  <!-- Tête -->
+  <circle cx="58" cy="50" r="27" fill="#ffffff" stroke="#1e293b" stroke-width="2.5"/>
+
+  <!-- Houppette -->
+  <path d="M50 24 Q46 12 54 8 Q52 16 57 23" fill="#ffffff" stroke="#1e293b" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M57 23 Q58 10 67 9 Q61 16 63 24" fill="#ffffff" stroke="#1e293b" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- Bec (souriant) -->
+  <path d="M74 44 Q98 48 116 66 Q96 62 77 60 Z" fill="url(#beakTop)" stroke="#9a3412" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M77 60 Q96 62 116 66 Q98 74 79 69 Z" fill="#ea580c" stroke="#9a3412" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M73 57 Q76 64 83 62" fill="none" stroke="#9a3412" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Joues -->
+  <ellipse cx="66" cy="64" rx="6" ry="3.5" fill="#fb7185" opacity="0.55"/>
+  <ellipse cx="38" cy="60" rx="5" ry="3" fill="#fb7185" opacity="0.45"/>
+
+  <!-- Yeux -->
+  <ellipse cx="49" cy="46" rx="9" ry="11" fill="#ffffff" stroke="#1e293b" stroke-width="2.2"/>
+  <ellipse cx="67" cy="45" rx="8" ry="10.5" fill="#ffffff" stroke="#1e293b" stroke-width="2.2"/>
+  <circle cx="52.5" cy="48" r="5" fill="#0f172a"/>
+  <circle cx="70" cy="47.5" r="4.7" fill="#0f172a"/>
+  <circle cx="54.2" cy="45.8" r="1.8" fill="#ffffff"/>
+  <circle cx="71.6" cy="45.4" r="1.7" fill="#ffffff"/>
+
+  <!-- Sourcils malicieux -->
+  <path d="M40 32 Q48 26 56 31" fill="none" stroke="#1e293b" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M61 30 Q68 25 75 30" fill="none" stroke="#1e293b" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

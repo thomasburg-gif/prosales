@@ -36,7 +36,8 @@
 
         /* Style Guide & Bulle de dialogue BD avec tête de guide */
         .stork-container { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; }
-        .stork-avatar { width: 60px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); background: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        .stork-avatar { width: 60px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); background: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); overflow: hidden; }
+        .stork-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .speech-bubble { background: #0f172a; border: 1px solid var(--accent); padding: 12px 16px; border-radius: 12px; border-top-left-radius: 2px; position: relative; color: var(--text-main); font-size: 0.9rem; line-height: 1.4; flex-grow: 1; }
         .stork-name { font-weight: bold; color: var(--accent); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: block; }
 
@@ -637,6 +638,23 @@ function getText(obj) {
     return obj[currentLang] || obj.fr || obj.de || obj.en || Object.values(obj)[0] || "";
 }
 
+// Avatar du guide : un emoji, ou une image (ex. « barnabe.svg »).
+function isAvatarImage(avatar) {
+    return /\.(svg|png|jpe?g|webp)$/i.test(avatar || '');
+}
+
+function setAvatar(el, avatar) {
+    el.textContent = '';
+    if (isAvatarImage(avatar)) {
+        const img = document.createElement('img');
+        img.src = avatar;
+        img.alt = '';
+        el.appendChild(img);
+    } else {
+        el.textContent = avatar;
+    }
+}
+
 function updateUI() {
     if (!currentGame) return;
     document.getElementById('game-title').innerText = getText(currentGame.title);
@@ -644,7 +662,7 @@ function updateUI() {
     document.getElementById('game-desc').innerText = getText(currentGame.desc);
 
     const guide = currentGame.guide;
-    document.getElementById('intro-avatar').textContent = guide.avatar;
+    setAvatar(document.getElementById('intro-avatar'), guide.avatar);
     document.getElementById('intro-guide-name').textContent = getText(guide.name);
     document.getElementById('start-btn').innerText =
         TRANSLATIONS[currentLang].startBtnTemplate.replace('{name}', getText(guide.name));
@@ -695,7 +713,7 @@ function loadStep(index) {
     if (!step) return;
 
     const guide = currentGame.guide;
-    document.getElementById('location-avatar').textContent = guide.avatar;
+    setAvatar(document.getElementById('location-avatar'), guide.avatar);
     document.getElementById('location-guide-name').textContent = getText(guide.name);
     document.getElementById('riddle-guide-name').textContent = getText(guide.name);
     document.getElementById('secret-guide-name').textContent = getText(guide.secretLabel);
@@ -990,9 +1008,25 @@ async function showSouvenir() {
     let cursorY = wrapCanvasText(ctx, getText(currentGame.title), W / 2, 90, W - 100, 50);
 
     cursorY += 20;
-    ctx.font = '64px sans-serif';
-    ctx.fillText(currentGame.guide.avatar, W / 2, cursorY + 55);
-    cursorY += 75;
+    const avatar = currentGame.guide.avatar;
+    const avatarImg = isAvatarImage(avatar) ? await loadImageForCanvas(avatar) : null;
+    if (avatarImg) {
+        const r = 60, cx = W / 2, cy = cursorY + 60;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.clip();
+        drawImageCover(ctx, avatarImg, cx - r, cy - r, r * 2, r * 2);
+        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        cursorY += 130;
+    } else {
+        ctx.font = '64px sans-serif';
+        ctx.fillText(avatar, W / 2, cursorY + 55);
+        cursorY += 75;
+    }
     ctx.font = '28px sans-serif';
     ctx.fillStyle = '#f8fafc';
     ctx.fillText(guideName, W / 2, cursorY + 20);
